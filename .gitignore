@@ -30,3 +30,6 @@ _ReSharper*/
 _releases/
 
 manifest.json
+
+# claude settings
+.claude/settings.local.json
