@@ -1,12 +1,19 @@
 [*.cs]
-# 缩进风格
+# K&R（花括号在新行）
 csharp_new_line_before_open_brace = false
 
 # 永远不要省略 this
 csharp_style_this = explicit:warning
 
-# 永远不要使用 ??= 语法糖
-dotnet_diagnostic.IDE0074.severity = silent
-
 # 关闭不需要的诊断
-dotnet_diagnostic.IDE0003.severity = silent
+dotnet_diagnostic.IDE0001.severity = none
+dotnet_diagnostic.IDE0002.severity = none
+# ??= 语法糖
+dotnet_diagnostic.IDE0074.severity = none
+dotnet_diagnostic.IDE0003.severity = none
+dotnet_diagnostic.IDE1006.severity = none
+# 主构造函数语法在 NET 6 中不支持
+dotnet_diagnostic.IDE0290.severity = none
+dotnet_diagnostic.IDE0028.severity = none
+# new() 语法糖
+dotnet_diagnostic.IDE0090.severity = none

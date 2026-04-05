@@ -8,7 +8,7 @@ namespace FilteredChestHopperRedux {
     public int LogLevel { get; set; }
     public bool CompareQuality { get; set; }
     public int TransferInterval { get; set; }
-    public bool AutomateRespect { get; set; }
+    public bool GrabAutomateChestGroup { get; set; }
 
     public ModConfig() {
       this.Reset();
@@ -18,7 +18,7 @@ namespace FilteredChestHopperRedux {
       this.LogLevel = 4;
       this.CompareQuality = false;
       this.TransferInterval = 60;
-      this.AutomateRespect = false;
+      this.GrabAutomateChestGroup = false;
     }
 
     public void RegisterConfigMenu(IModHelper helper, IManifest manifest) {
@@ -63,10 +63,10 @@ namespace FilteredChestHopperRedux {
 
       configMenu.AddBoolOption(
           mod: manifest,
-          name: () => "Automate Respect",
+          name: () => "Grab all chests in Automate Group if the chest above in an Automate Group",
           tooltip: () => "TODO",
-          getValue: () => this.AutomateRespect,
-          setValue: value => this.AutomateRespect = value
+          getValue: () => this.GrabAutomateChestGroup,
+          setValue: value => this.GrabAutomateChestGroup = value
       );
 
     }

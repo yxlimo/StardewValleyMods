@@ -1,7 +1,9 @@
 using System;
+using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.ItemTypeDefinitions;
+using StardewValley.Objects;
 
 namespace FilteredChestHopperRedux {
   internal static class Utill {
@@ -11,6 +13,31 @@ namespace FilteredChestHopperRedux {
         if (contextTag.Contains("preserve_sheet_index_")) {
           return contextTag.Replace("preserve_sheet_index_", "");
         }
+      }
+      return null;
+    }
+
+    public static bool IsHopper(StardewValley.Object obj) {
+      return obj is Chest { SpecialChestType: Chest.SpecialChestTypes.AutoLoader };
+    }
+
+    public static Chest ExtractHopper(StardewValley.Object obj) {
+      return obj as Chest;
+    }
+
+    public static bool TryExtractHopper(StardewValley.Object obj, out Chest hopper) {
+      if (IsHopper(obj)) {
+        hopper = ExtractHopper(obj);
+
+      } else {
+        hopper = null;
+      }
+      return hopper != null;
+    }
+
+    public static Chest GetChestAt(GameLocation location, Vector2 position) {
+      if (location.objects.TryGetValue(position, out StardewValley.Object obj) && obj != null && obj is Chest chest) {
+        return chest;
       }
       return null;
     }
