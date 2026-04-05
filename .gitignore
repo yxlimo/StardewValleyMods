@@ -7,6 +7,7 @@
 *.sln.docstates
 
 # build results
+Directory.Build.props
 [Dd]ebug/
 [Rr]elease/
 [Bb]in/
@@ -29,7 +30,8 @@ _ReSharper*/
 # release zips
 _releases/
 
-manifest.json
-
 # claude settings
 .claude/settings.local.json
+
+# local scripts
+scripts/
