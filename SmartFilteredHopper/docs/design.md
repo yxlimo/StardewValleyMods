@@ -103,3 +103,32 @@ private void ObjectListChanged(object sender, ObjectListChangedEventArgs e) {
 - `Pipeline` → `LocationManager`
 - `Pipeline.cs` → `LocationManager.cs`
 - `BuildPipeline` → `BuildLocationManager`
+
+## 今日工作摘要 (2026-04-06)
+
+### 1. 项目重命名
+- `FilteredChestHopperRedux` → `SmartFilteredHopper`
+- 更新所有 namespace 引用
+
+### 2. IInputGroup 接口实现
+- `ChestWrap`: 包装单个 chest
+- `AutomateChestGroup`: flood fill 算法查找所有连接的 chest 和 machine，flood fill 时排除 hopper
+
+### 3. Config 保存时机的修复
+- 将 `GrabAutomateChestGroup` 变化的 rebuild 从 `OnFieldChanged`（立即）移到 `Save`（用户保存配置后）
+- `RegisterConfigMenu` 增加 `Action onAutomateChanged` 参数
+- 新增 `Context.AutomateEnabled()` 方法，同时检查 `automateApi != null && Config.GrabAutomateChestGroup`
+- 移除 `OnAutomateChanged` 方法
+
+### 4. Filter Items 获取方式修复
+- 原代码 `GetItemsForPlayer(this.InputGroup.StartChest.owner.Value)` 从 input chest 的 owner 取 filter
+- 修复为直接 `this.Hopper.Items` 取 hopper 里的 filter items
+
+### 5. HandleChestChanged 逻辑修复
+- 原逻辑只调用 `RebuildIOGroups()`
+- 修复为直接调用 `buildLocationManager(location)` 重建整个 location 的 manager
+- 解决先放 hopper 再放 output chest 导致 hopper 未被管理的问题
+
+### 6. 日志增强
+- `AutomateChestGroup` 初始化时打印收集到的 chests 和 machines
+- `ProcessInputChest` 打印 hopper 位置、input items、filter items、output 位置

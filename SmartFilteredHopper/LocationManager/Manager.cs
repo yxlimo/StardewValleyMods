@@ -1,14 +1,12 @@
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.Objects;
-using System.Linq;
-using System;
-using StardewValley.ItemTypeDefinitions;
-using StardewValley.GameData.FishPonds;
 using StardewValley.Inventories;
+using xTile.Dimensions;
 
-namespace FilteredChestHopperRedux {
+namespace SmartFilteredHopper.LocationManager {
 
   internal class HopperIOGroup {
     public Chest Hopper { get; set; }
@@ -36,16 +34,19 @@ namespace FilteredChestHopperRedux {
     /// </summary>
     public void ProcessInputChest() {
       var inputItems = this.InputGroup.GetItems();
+      var filterItems = this.Hopper.Items;
+      string inputNames = string.Join(", ", inputItems.Select(i => i.Name));
+      string filterNames = string.Join(", ", filterItems.Where(i => i != null).Select(i => i.Name));
+      this.ctx.Trace($"ProcessInputChest: hopper={this.Hopper.TileLocation}, input=[{inputNames}], filter=[{filterNames}], output={this.Output.TileLocation}");
 
       for (int i = inputItems.Count - 1; i >= 0; i--) {
-        var filterItems = this.Hopper.GetItemsForPlayer(this.InputGroup.StartChest.owner.Value);
         Item item = inputItems[i];
         if (!this.shouldTransfer(item, filterItems)) {
-          this.ctx.Trace($"Skipping item {item.Name} - filter mismatch");
+          this.ctx.Trace($"Skip {item.Name}: not in filter");
           continue;
         }
-        this.transferItem(item, i);
-        this.ctx.Trace($"Transferring item {item.Name} x{item.Stack}");
+        this.transferItem(item);
+        this.ctx.Trace($"Transferred {item.Name} to {this.Output.TileLocation}");
       }
     }
 
@@ -78,7 +79,7 @@ namespace FilteredChestHopperRedux {
     /// <summary>
     /// 转移物品到目标箱
     /// </summary>
-    private bool transferItem(Item item, int itemIndex) {
+    private bool transferItem(Item item) {
       string processedItemID = Utill.GetItemsFlavourID(item);
       Item newItem;
 
@@ -87,8 +88,7 @@ namespace FilteredChestHopperRedux {
         newItem = Utill.GetFlavoredObjectVariant(item as StardewValley.Object, processedItem).CreateItem();
         newItem.Stack = item.Stack;
         newItem.Quality = item.Quality;
-      }
-      else {
+      } else {
         newItem = ItemRegistry.Create(item.QualifiedItemId, item.Stack, item.Quality);
       }
 
@@ -99,41 +99,57 @@ namespace FilteredChestHopperRedux {
       this.InputGroup.RemoveItem(item, item.Stack);
       return true;
     }
+
+    /// <summary>
+    /// 重建 InputGroup
+    /// </summary>
+    public void RebuildInput(Context ctx, Chest inputChest) {
+      IInputGroup inputGroup;
+      if (ctx.AutomateEnabled()) {
+        inputGroup = new AutomateChestGroup(ctx, inputChest, this.Hopper.Location);
+      }
+      else {
+        inputGroup = new ChestWrap(inputChest);
+      }
+      this.InputGroup = inputGroup;
+    }
   }
 
-  internal class LocationManager {
+  internal class Manager {
+    //Applying this flag gets automate to ignore the hopper, so I hijack it
+    private const string modDataFlag = "spacechase0.SuperHopper";
     public List<HopperIOGroup> IOGroups { get; }
     private readonly Context ctx;
+    private GameLocation location;
 
-    public LocationManager(Context ctx) {
+    public Manager(Context ctx, GameLocation location) {
       this.ctx = ctx;
+      this.location = location;
       this.IOGroups = new List<HopperIOGroup>();
     }
 
     public void Add(Chest hopper) {
-      if (!this.IsHopperConnected(hopper)) {
+      var (input, output) = this.findHopperConnector(hopper);
+      if (input == null || output == null) {
+        this.ctx.Trace($"LocationManager for {this.location.Name}: Hopper({hopper.TileLocation}) does not have valid input/output chests, skipping");
         return;
       }
 
-      var chests = this.GetInputOutputChests(hopper);
 
       IInputGroup inputGroup;
-      if (this.ctx.Config.GrabAutomateChestGroup) {
-        inputGroup = new AutomateChestGroup(this.ctx, chests.input, hopper.Location);
-      } else {
-        inputGroup = new ChestWrap(chests.input);
+      if (this.ctx.AutomateEnabled()) {
+        inputGroup = new AutomateChestGroup(this.ctx, input, hopper.Location);
+      }
+      else {
+        inputGroup = new ChestWrap(input);
       }
 
-      hopper.modData[ModEntry.ModDataFlag] = "1";
-      this.IOGroups.Add(new HopperIOGroup(this.ctx, hopper, inputGroup, chests.output));
+      hopper.modData[modDataFlag] = "1";
+      this.IOGroups.Add(new HopperIOGroup(this.ctx, hopper, inputGroup, output));
+      this.ctx.Trace($"LocationManager for {this.location.Name}: Hopper({hopper.TileLocation}) added");
     }
 
-    private bool IsHopperConnected(Chest hopper) {
-      var chests = this.GetInputOutputChests(hopper);
-      return chests.input != null && chests.output != null;
-    }
-
-    private (Chest input, Chest output) GetInputOutputChests(Chest hopper) {
+    private (Chest input, Chest output) findHopperConnector(Chest hopper) {
       Chest inputChest = Utill.GetChestAt(hopper.Location, hopper.TileLocation - new Vector2(0, 1));
       Chest outputChest = Utill.GetChestAt(hopper.Location, hopper.TileLocation + new Vector2(0, 1));
       return (inputChest, outputChest);
@@ -148,10 +164,28 @@ namespace FilteredChestHopperRedux {
     public void RemoveGroupByHopper(Chest hopper) {
       for (int i = this.IOGroups.Count - 1; i >= 0; i--) {
         if (this.IOGroups[i].Hopper == hopper) {
-          this.IOGroups[i].Hopper.modData.Remove(ModEntry.ModDataFlag);
+          this.ctx.Trace($"LocationManager for {this.location.Name}: Hopper({hopper.TileLocation}) removed");
+          this.IOGroups[i].Hopper.modData.Remove(modDataFlag);
           this.IOGroups.RemoveAt(i);
           return;
         }
+      }
+    }
+
+    /// <summary>
+    /// 重建所有 IOGroup 的 Input
+    /// </summary>
+    public void RebuildIOGroups() {
+      for (int i = this.IOGroups.Count - 1; i >= 0; i--) {
+        var group = this.IOGroups[i];
+        var (input, output) = this.findHopperConnector(group.Hopper);
+        if (input == null || output == null) {
+          // input 或 output 不存在，移除该 Group
+          group.Hopper.modData.Remove(modDataFlag);
+          this.IOGroups.RemoveAt(i);
+          continue;
+        }
+        group.RebuildInput(this.ctx, input);
       }
     }
   }

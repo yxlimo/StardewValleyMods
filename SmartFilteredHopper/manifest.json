@@ -1,0 +1,12 @@
+{
+  "$schema": "https://smapi.io/schemas/manifest.json",
+  "UniqueID": "yxlimo.SmartFilteredHopper",
+  "Name": "SmartFilteredHopper",
+  "Author": "yxlimo",
+  "Version": "0.1.0",
+  "Description": "Smart hopper that filters items between chests",
+  "EntryDll": "SmartFilteredHopper.dll",
+  "UpdateKeys": [
+    "Nexus:?"
+  ]
+}

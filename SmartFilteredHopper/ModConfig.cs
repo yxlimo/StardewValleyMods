@@ -1,14 +1,19 @@
 using System;
-using GenericModConfigMenu;
+using System.Reflection;
+using SmartFilteredHopper.Interfaces;
 using StardewModdingAPI;
+using xTile.Format;
 
-namespace FilteredChestHopperRedux {
+namespace SmartFilteredHopper {
   internal class ModConfig {
 
     public int LogLevel { get; set; }
     public bool CompareQuality { get; set; }
     public int TransferInterval { get; set; }
     public bool GrabAutomateChestGroup { get; set; }
+
+    private IGenericModConfigMenuApi configMenu;
+    private IManifest manifest;
 
     public ModConfig() {
       this.Reset();
@@ -21,19 +26,17 @@ namespace FilteredChestHopperRedux {
       this.GrabAutomateChestGroup = false;
     }
 
-    public void RegisterConfigMenu(IModHelper helper, IManifest manifest) {
-      var configMenu = helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
-      if (configMenu is null) {
-        return;
-      }
+    public void RegisterConfigMenu(IGenericModConfigMenuApi configMenuApi, IManifest manifest, Action onSave) {
+      this.configMenu = configMenuApi;
+      this.manifest = manifest;
 
-      configMenu.Register(
+      this.configMenu.Register(
           mod: manifest,
           reset: () => this.Reset(),
-          save: () => { }
+          save: () => onSave?.Invoke()
       );
 
-      configMenu.AddNumberOption(
+      this.configMenu.AddNumberOption(
           mod: manifest,
           name: () => "Log Level",
           tooltip: () => "lower is more verbose,only show error log in default",
@@ -43,7 +46,7 @@ namespace FilteredChestHopperRedux {
           max: 5
       );
 
-      configMenu.AddBoolOption(
+      this.configMenu.AddBoolOption(
           mod: manifest,
           name: () => "Compare Quality",
           tooltip: () => "If true the filters will check the qualities of items as well as the item id",
@@ -51,7 +54,7 @@ namespace FilteredChestHopperRedux {
           setValue: value => this.CompareQuality = value
       );
 
-      configMenu.AddNumberOption(
+      this.configMenu.AddNumberOption(
           mod: manifest,
           name: () => "Tranfer Interval",
           tooltip: () => "How often the item transfer logic runs in frames, ie. 1 is every frame, 60 every 60 frames which should be about every second",
@@ -61,14 +64,13 @@ namespace FilteredChestHopperRedux {
           max: 600
       );
 
-      configMenu.AddBoolOption(
+      this.configMenu.AddBoolOption(
           mod: manifest,
-          name: () => "Grab all chests in Automate Group if the chest above in an Automate Group",
-          tooltip: () => "TODO",
+          name: () => "Connect Automate Chest Group",
+          tooltip: () => "Grab all chests in Automate Group if the chest above in an Automate Group(just work when you have automate mod)",
           getValue: () => this.GrabAutomateChestGroup,
           setValue: value => this.GrabAutomateChestGroup = value
       );
-
     }
   }
 }

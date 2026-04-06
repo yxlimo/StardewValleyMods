@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>FilteredChestHopperRedux</AssemblyName>
-    <RootNamespace>FilteredChestHopperRedux</RootNamespace>
+    <AssemblyName>SmartFilteredHopper</AssemblyName>
+    <RootNamespace>SmartFilteredHopper</RootNamespace>
     <Version>0.1.0</Version>
     <LangVersion>latest</LangVersion>
     <TargetFramework>net6.0</TargetFramework>
     <EnableHarmony>true</EnableHarmony>
-    <ModFolderName>FilteredChestHopperRedux</ModFolderName>
+    <ModFolderName>SmartFilteredHopper</ModFolderName>
     <EnableModDeploy>true</EnableModDeploy>
     <EnableModZip>true</EnableModZip>
     <IgnoreModFilePaths>config.json</IgnoreModFilePaths>

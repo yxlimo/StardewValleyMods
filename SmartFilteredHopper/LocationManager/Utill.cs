@@ -5,7 +5,7 @@ using StardewValley;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.Objects;
 
-namespace FilteredChestHopperRedux {
+namespace SmartFilteredHopper.LocationManager {
   internal static class Utill {
 
     public static string GetItemsFlavourID(Item item) {
@@ -29,7 +29,8 @@ namespace FilteredChestHopperRedux {
       if (IsHopper(obj)) {
         hopper = ExtractHopper(obj);
 
-      } else {
+      }
+      else {
         hopper = null;
       }
       return hopper != null;
