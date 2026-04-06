@@ -1,62 +1,64 @@
-# FilteredChestHopper MOD 学习笔记
+# SmartFilteredHopper MOD 学习笔记
 
-## 2025-04-03 会话内容
+## 2026-04-06 会话内容
 
 ### 1. 代码结构理解
 
-这个 MOD 实现的功能：
-- 给游戏中的 Hopper（投送器）添加输入输出功能
-- 读取 Hopper 上方宝箱的物品，根据白名单过滤，传送到下方宝箱
-
-### 2. 关键文件
-
-| 文件 | 作用 |
-|------|------|
-| Mod.cs | 主入口，事件监听 |
-| Pipeline.cs | 核心传输逻辑 |
-| ModConfig.cs | 配置文件 |
-
-### 3. Pipeline.cs 核心逻辑
-
 ```
- AttemptTransfer()
-  │
-  ├─ 步骤1: CollectInputAndOutputChests() - 收集输入输出宝箱
-  │
-  ├─ 步骤2: ProcessInputChest() - 处理单个输入宝箱
-  │
-  └─ 步骤3: ShouldTransfer() - 检查过滤器
-       │
-       └─ TransferItem() - 执行转移
+ModEntry
+  └── Dictionary<GameLocation, LocationManager.Manager>
+        └── Manager.IOGroups: List<HopperIOGroup>
+              ├── Hopper (Chest)
+              ├── IInputGroup (ChestWrap / AutomateChestGroup)
+              └── Output Chest
 ```
 
-### 4. 转移数量返回值约定
+### 2. 核心类
 
-| 返回值 | 含义 |
-|--------|------|
-| true | 匹配过滤器，执行转移 |
-| false | 未匹配，不转移 |
+- **Manager**: 管理单个 GameLocation 下的所有 Hopper IO 组
+- **HopperIOGroup**: 管理单个 hopper 的输入输出关系
+- **IInputGroup**: 接口，抽象输入组
+  - **ChestWrap**: 包装单个 chest
+  - **AutomateChestGroup**: flood fill 查找所有连接的 chest 和 machine
 
-### 5. 加工产物识别
+### 3. 事件处理流程
 
-使用上下文标签 (context tags) 识别：
-- `preserve_sheet_index_{ID}` - 记录原始物品ID
-- 例如：蓝莓酒 = 348 + preserve_sheet_index_452
+```
+ObjectListChanged
+  ├── e.Removed: HandleHopperRemoved / HandleChestChanged
+  └── e.Added: HandleHopperAdded / HandleChestChanged
 
-### 6. 关键类
+HandleChestChanged → buildLocationManager(location) 重建整个 manager
+```
 
-- `Pipeline` - 主管道逻辑
-- `HopperIOGroup` - 按 hopper 分组的输入输出数据结构 `{ Hopper, Inputs[], Output }`
-- `ChestLeftToRight` - hopper 从左到右排序比较器
+### 4. IInputGroup 接口
 
-### 7. ModConfig 注册模式
+```csharp
+internal interface IInputGroup {
+    Chest StartChest { get; }
+    bool Contains(Chest chest);
+    void RemoveItem(Item item, int count);
+    List<Item> GetItems();
+}
+```
 
-配置选项注册在 `ModConfig.RegisterOptions()` 方法中，由 `Mod.GameLaunched()` 调用。
+### 5. Filter Items 来源
+
+Filter items 存储在 **hopper 本身**的 Items 里，不是 input chest。
+
+### 6. Automate API
+
+使用 `GetMachineStates(location, area)` 获取 machine 状态，用于 flood fill 时判断是否为 machine。
+
+### 7. Config 保存时机
+
+配置保存时（用户点 Save）才触发 rebuild，通过 `RegisterConfigMenu` 的 `save` 回调传入 `onAutomateChanged` action。
 
 ### 8. 配置项
 
 | 配置项 | 作用 |
 |--------|------|
+| LogLevel | 日志级别 |
 | CompareQuality | 是否比较物品品质 |
 | TransferInterval | 转移间隔（帧数） |
-| AutomateRespect | 是否尊重 Automate mod |
+| GrabAutomateChestGroup | 是否启用 Automate Group |
