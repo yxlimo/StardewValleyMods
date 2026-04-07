@@ -37,4 +37,5 @@ _releases/
 scripts/
 
 # playwright
+.playwright
 .playwright-cli/

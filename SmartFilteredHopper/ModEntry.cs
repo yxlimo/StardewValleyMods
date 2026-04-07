@@ -17,6 +17,7 @@ namespace SmartFilteredHopper {
     public override void Entry(IModHelper helper) {
       helper.Events.GameLoop.UpdateTicked += this.UpdateTicked;
       helper.Events.GameLoop.SaveLoaded += this.SaveLoaded;
+      helper.Events.GameLoop.DayStarted += this.DayStarted;
       helper.Events.GameLoop.GameLaunched += this.GameLaunched;
       helper.Events.World.ObjectListChanged += this.ObjectListChanged;
 
@@ -28,7 +29,7 @@ namespace SmartFilteredHopper {
     
       var configMenu = this.Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
       if (configMenu != null) {
-        this.ctx.Config.RegisterConfigMenu(configMenu, this.ModManifest, this.onConfigSave);
+        this.ctx.Config.RegisterConfigMenu(configMenu, this.ModManifest, this.Helper, this.onConfigSave);
         this.ctx.Info("Mod Config Menu detected");
       }
 
@@ -41,10 +42,12 @@ namespace SmartFilteredHopper {
 
     private void SaveLoaded(object sender, SaveLoadedEventArgs e) {
       this.ctx.Info("SaveLoaded, try regenerating LocationManagers");
-      Utility.ForEachLocation(location => {
-        this.buildLocationManager(location);
-        return true;
-      });
+      this.rebuildAllLocationManagers();
+    }
+
+    private void DayStarted(object sender, DayStartedEventArgs e) {
+      this.ctx.Info("DayStarted, rebuilding all LocationManagers");
+      this.rebuildAllLocationManagers();
     }
 
     private void ObjectListChanged(object sender, ObjectListChangedEventArgs e) {
@@ -121,6 +124,14 @@ namespace SmartFilteredHopper {
       }
 
       this.managers[location] = manager;
+    }
+
+    private void rebuildAllLocationManagers() {
+      this.managers.Clear();
+      Utility.ForEachLocation(location => {
+        this.buildLocationManager(location);
+        return true;
+      });
     }
 
   }

@@ -1,0 +1,10 @@
+{
+    "config.enable-debug": "Enable Debug",
+    "config.enable-debug.tooltip": "Enable detailed debug logging. Disable for cleaner console output.",
+    "config.compare-quality": "Compare Quality",
+    "config.compare-quality.tooltip": "If enabled, filters will check item quality as well as item ID",
+    "config.transfer-interval": "Transfer Interval",
+    "config.transfer-interval.tooltip": "How often the item transfer logic runs in frames (1 = every frame, 60 = every second)",
+    "config.grab-automate-chest-group": "Connect Automate Chest Group",
+    "config.grab-automate-chest-group.tooltip": "Grab all chests in Automate Group if the input chest is part of one (requires Automate mod)"
+}

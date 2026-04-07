@@ -1,8 +1,7 @@
 using System;
-using System.Reflection;
+using System.Runtime.InteropServices;
 using SmartFilteredHopper.Interfaces;
 using StardewModdingAPI;
-using xTile.Format;
 
 namespace SmartFilteredHopper {
   internal class ModConfig {
@@ -13,22 +12,20 @@ namespace SmartFilteredHopper {
     public bool GrabAutomateChestGroup { get; set; }
 
     private IGenericModConfigMenuApi configMenu;
-    private IManifest manifest;
 
     public ModConfig() {
       this.Reset();
     }
 
     public void Reset() {
-      this.LogLevel = 4;
+      this.LogLevel = 0;
       this.CompareQuality = false;
-      this.TransferInterval = 60;
+      this.TransferInterval = 360;
       this.GrabAutomateChestGroup = false;
     }
 
-    public void RegisterConfigMenu(IGenericModConfigMenuApi configMenuApi, IManifest manifest, Action onSave) {
+    public void RegisterConfigMenu(IGenericModConfigMenuApi configMenuApi, IManifest manifest, IModHelper helper, Action onSave) {
       this.configMenu = configMenuApi;
-      this.manifest = manifest;
 
       this.configMenu.Register(
           mod: manifest,
@@ -36,28 +33,31 @@ namespace SmartFilteredHopper {
           save: () => onSave?.Invoke()
       );
 
-      this.configMenu.AddNumberOption(
+      this.configMenu.AddBoolOption(
           mod: manifest,
-          name: () => "Log Level",
-          tooltip: () => "lower is more verbose,only show error log in default",
-          getValue: () => this.LogLevel,
-          setValue: value => this.LogLevel = value,
-          min: 0,
-          max: 5
+          name: () => helper.Translation.Get("config.enable-debug"),
+          tooltip: () => helper.Translation.Get("config.enable-debug.tooltip"),
+          getValue: () => this.LogLevel <= 1,
+          setValue: value => {
+            if (value)
+              this.LogLevel = 0;
+            else
+              this.LogLevel = 2;
+          }
       );
 
       this.configMenu.AddBoolOption(
           mod: manifest,
-          name: () => "Compare Quality",
-          tooltip: () => "If true the filters will check the qualities of items as well as the item id",
+          name: () => helper.Translation.Get("config.compare-quality"),
+          tooltip: () => helper.Translation.Get("config.compare-quality.tooltip"),
           getValue: () => this.CompareQuality,
           setValue: value => this.CompareQuality = value
       );
 
       this.configMenu.AddNumberOption(
           mod: manifest,
-          name: () => "Tranfer Interval",
-          tooltip: () => "How often the item transfer logic runs in frames, ie. 1 is every frame, 60 every 60 frames which should be about every second",
+          name: () => helper.Translation.Get("config.transfer-interval"),
+          tooltip: () => helper.Translation.Get("config.transfer-interval.tooltip"),
           getValue: () => this.TransferInterval,
           setValue: value => this.TransferInterval = value,
           min: 1,
@@ -66,8 +66,8 @@ namespace SmartFilteredHopper {
 
       this.configMenu.AddBoolOption(
           mod: manifest,
-          name: () => "Connect Automate Chest Group",
-          tooltip: () => "Grab all chests in Automate Group if the chest above in an Automate Group(just work when you have automate mod)",
+          name: () => helper.Translation.Get("config.grab-automate-chest-group"),
+          tooltip: () => helper.Translation.Get("config.grab-automate-chest-group.tooltip"),
           getValue: () => this.GrabAutomateChestGroup,
           setValue: value => this.GrabAutomateChestGroup = value
       );

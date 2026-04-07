@@ -46,7 +46,7 @@ namespace SmartFilteredHopper.LocationManager {
           continue;
         }
         this.transferItem(item);
-        this.ctx.Trace($"Transferred {item.Name} to {this.Output.TileLocation}");
+        this.ctx.Info($"Transferred {item.Name} to {this.Output.TileLocation}");
       }
     }
 
@@ -131,7 +131,7 @@ namespace SmartFilteredHopper.LocationManager {
     public void Add(Chest hopper) {
       var (input, output) = this.findHopperConnector(hopper);
       if (input == null || output == null) {
-        this.ctx.Trace($"LocationManager for {this.location.Name}: Hopper({hopper.TileLocation}) does not have valid input/output chests, skipping");
+        this.ctx.Trace($"Hopper({hopper.TileLocation}) in {this.location.Name} does not have valid input/output chests, skipping");
         return;
       }
 
@@ -139,14 +139,16 @@ namespace SmartFilteredHopper.LocationManager {
       IInputGroup inputGroup;
       if (this.ctx.AutomateEnabled()) {
         inputGroup = new AutomateChestGroup(this.ctx, input, hopper.Location);
+        this.ctx.Info($"Hopper({hopper.TileLocation}) in {this.location.Name} with Automate Mode added");
       }
       else {
         inputGroup = new ChestWrap(input);
+        this.ctx.Info($"Hopper({hopper.TileLocation}) in {this.location.Name} with Normal Mode added");
       }
 
       hopper.modData[modDataFlag] = "1";
       this.IOGroups.Add(new HopperIOGroup(this.ctx, hopper, inputGroup, output));
-      this.ctx.Trace($"LocationManager for {this.location.Name}: Hopper({hopper.TileLocation}) added");
+      
     }
 
     private (Chest input, Chest output) findHopperConnector(Chest hopper) {
@@ -164,7 +166,7 @@ namespace SmartFilteredHopper.LocationManager {
     public void RemoveGroupByHopper(Chest hopper) {
       for (int i = this.IOGroups.Count - 1; i >= 0; i--) {
         if (this.IOGroups[i].Hopper == hopper) {
-          this.ctx.Trace($"LocationManager for {this.location.Name}: Hopper({hopper.TileLocation}) removed");
+          this.ctx.Info($"Hopper({hopper.TileLocation}) in {this.location.Name} removed");
           this.IOGroups[i].Hopper.modData.Remove(modDataFlag);
           this.IOGroups.RemoveAt(i);
           return;
