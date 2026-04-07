@@ -129,6 +129,14 @@ namespace SmartFilteredHopper.LocationManager {
     }
 
     public void Add(Chest hopper) {
+      // Skip if already added
+      if (this.IOGroups.Any(g => g.Hopper == hopper)) {
+        return;
+      }
+
+      // Mark hopper with modData flag immediately when scanning
+      hopper.modData[modDataFlag] = "1";
+
       var (input, output) = this.findHopperConnector(hopper);
       if (input == null || output == null) {
         this.ctx.Trace($"Hopper({hopper.TileLocation}) in {this.location.Name} does not have valid input/output chests, skipping");
@@ -146,9 +154,8 @@ namespace SmartFilteredHopper.LocationManager {
         this.ctx.Info($"Hopper({hopper.TileLocation}) in {this.location.Name} with Normal Mode added");
       }
 
-      hopper.modData[modDataFlag] = "1";
       this.IOGroups.Add(new HopperIOGroup(this.ctx, hopper, inputGroup, output));
-      
+
     }
 
     private (Chest input, Chest output) findHopperConnector(Chest hopper) {
