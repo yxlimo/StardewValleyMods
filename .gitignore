@@ -35,3 +35,6 @@ _releases/
 
 # local scripts
 scripts/
+
+# playwright
+.playwright-cli/
