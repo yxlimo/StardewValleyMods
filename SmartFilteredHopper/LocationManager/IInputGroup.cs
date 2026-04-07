@@ -98,6 +98,11 @@ namespace SmartFilteredHopper.LocationManager {
     public List<Item> GetItems() {
       var items = new List<Item>();
       foreach (var chest in this.chests) {
+        // Skip chests that Automate is configured not to pull from
+        // "Disable" means "Never put items in this chest" in Automate config
+        if (chest.modData.TryGetValue("Pathoschild.Automate/StoreItems", out var storeValue) && storeValue == "Disable") {
+          continue;
+        }
         items.AddRange(chest.GetItemsForPlayer(chest.owner.Value));
       }
       return items;

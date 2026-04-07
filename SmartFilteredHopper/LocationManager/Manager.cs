@@ -35,18 +35,18 @@ namespace SmartFilteredHopper.LocationManager {
     public void ProcessInputChest() {
       var inputItems = this.InputGroup.GetItems();
       var filterItems = this.Hopper.Items;
-      string inputNames = string.Join(", ", inputItems.Select(i => i.Name));
-      string filterNames = string.Join(", ", filterItems.Where(i => i != null).Select(i => i.Name));
+      string inputNames = string.Join(", ", inputItems.Select(i => $"{i.Name}:{i.QualifiedItemId}"));
+      string filterNames = string.Join(", ", filterItems.Where(i => i != null).Select(i => $"{i.Name}:{i.QualifiedItemId}"));
       this.ctx.Trace($"ProcessInputChest: hopper={this.Hopper.TileLocation}, input=[{inputNames}], filter=[{filterNames}], output={this.Output.TileLocation}");
 
       for (int i = inputItems.Count - 1; i >= 0; i--) {
         Item item = inputItems[i];
         if (!this.shouldTransfer(item, filterItems)) {
-          this.ctx.Trace($"Skip {item.Name}: not in filter");
+          this.ctx.Trace($"Skip {item.Name}:{item.QualifiedItemId}: not passed in filter");
           continue;
         }
         this.transferItem(item);
-        this.ctx.Info($"Transferred {item.Name} to {this.Output.TileLocation}");
+        this.ctx.Info($"Transferred {item.Name}:{item.QualifiedItemId} to {this.Output.TileLocation}");
       }
     }
 
@@ -65,11 +65,17 @@ namespace SmartFilteredHopper.LocationManager {
           continue;
         if (filterItem.QualifiedItemId != item.QualifiedItemId)
           continue;
-        if (Utill.GetItemsFlavourID(filterItem) != Utill.GetItemsFlavourID(item))
-          continue;
+        // 只有当物品和过滤器都是工匠物品时才比较来源
+        if (this.ctx.Config.CompareArtifactSource && Utill.HasPreserveSource(item) && Utill.HasPreserveSource(filterItem)) {
+          string itemSource = Utill.GetPreserveTypeID(item);
+          string filterSource = Utill.GetPreserveTypeID(filterItem);
+          this.ctx.Trace($"shouldTransfer: {item.Name}:{item.QualifiedItemId} CompareArtifactSource enabled, itemSource={itemSource}, filterSource={filterSource}");
+          if (itemSource != filterSource) {
+            continue;
+          }
+        }
         if (this.ctx.Config.CompareQuality && filterItem.Quality != item.Quality)
           continue;
-
         return true;
       }
 
@@ -80,17 +86,23 @@ namespace SmartFilteredHopper.LocationManager {
     /// 转移物品到目标箱
     /// </summary>
     private bool transferItem(Item item) {
-      string processedItemID = Utill.GetItemsFlavourID(item);
-      Item newItem;
+      string artifactSourceID = Utill.GetPreserveTypeID(item);
+      var newItem = item.getOne();
+      newItem.Stack = item.Stack;
+      // newItem.Quality = item.Quality;
 
-      if (!string.IsNullOrEmpty(processedItemID)) {
-        StardewValley.Object processedItem = new(processedItemID, 1);
-        newItem = Utill.GetFlavoredObjectVariant(item as StardewValley.Object, processedItem).CreateItem();
-        newItem.Stack = item.Stack;
-        newItem.Quality = item.Quality;
-      } else {
-        newItem = ItemRegistry.Create(item.QualifiedItemId, item.Stack, item.Quality);
-      }
+      // if (!string.IsNullOrEmpty(artifactSourceID)) {
+      //   StardewValley.Object processedItem = new(artifactSourceID, 1);
+      //   var flavoredVariant = Utill.GetFlavoredObjectVariant(item as StardewValley.Object, processedItem);
+      //   this.ctx.Trace($"transferItem: item={item.Name}({item.QualifiedItemId}), artifactSource={artifactSourceID}, flavoredVariant={flavoredVariant?.Item?.Name ?? "null"}");
+      //   newItem = flavoredVariant?.CreateItem();
+      //   if (newItem != null) {
+      //     newItem.Stack = item.Stack;
+      //     newItem.Quality = item.Quality;
+      //   }
+      // } else {
+      //   newItem = ItemRegistry.Create(item.QualifiedItemId, item.Stack, item.Quality);
+      // }
 
       if (this.Output.addItem(newItem) != null) {
         return false;

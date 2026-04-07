@@ -3,6 +3,8 @@
     "config.enable-debug.tooltip": "启用详细调试日志。禁用以获得更简洁的控制台输出。",
     "config.compare-quality": "比较品质",
     "config.compare-quality.tooltip": "启用后，过滤器将同时检查物品 ID 和品质",
+    "config.compare-artifact-source": "比较工匠物品来源",
+    "config.compare-artifact-source.tooltip": "启用后，过滤器将检查工匠物品的来源（如杨桃果酒与上古水果果酒的区别）。禁用后可转移同类型的所有变体。",
     "config.transfer-interval": "转移间隔",
     "config.transfer-interval.tooltip": "物品转移逻辑的运行频率，按帧数计算（1 = 每帧，60 = 每秒）",
     "config.grab-automate-chest-group": "连接 Automate 箱子组",

@@ -8,11 +8,43 @@ using StardewValley.Objects;
 namespace SmartFilteredHopper.LocationManager {
   internal static class Utill {
 
-    public static string GetItemsFlavourID(Item item) {
+    /// <summary>
+    /// 判断是否为有风味来源的工匠物品（酒、果酱、果汁、腌菜、蜂蜜、鱼子等）
+    /// </summary>
+    public static bool HasPreserveSource(Item item) {
+      if (item is not StardewValley.Object obj)
+        return false;
+      return obj.itemId.Value switch {
+        "348" => true,  // wine
+        "344" => true,  // jelly
+        "350" => true,  // juice
+        "342" => true,  // pickle
+        "340" => true,  // honey
+        "812" => true,  // roe
+        "447" => true,  // aged roe
+        _ => false
+      };
+    }
+
+    /// <summary>
+    /// 获取物品的加工类型 ID（如 344=果酱，348=葡萄酒，350=果汁）
+    /// </summary>
+    public static string GetPreserveTypeID(Item item) {
       foreach (string contextTag in item.GetContextTags()) {
         if (contextTag.Contains("preserve_sheet_index_")) {
           return contextTag.Replace("preserve_sheet_index_", "");
         }
+      }
+      return null;
+    }
+
+    /// <summary>
+    /// 获取物品的风味来源 ID（如 88=葡萄，613=苹果，304=草莓）
+    /// 用于区分同类型不同风味的加工品（如葡萄果酱 vs 苹果果酱）
+    /// </summary>
+    public static string GetFlavorSourceID(Item item) {
+      if (item is StardewValley.Object obj && obj.preservedParentSheetIndex.Value != null) {
+        return obj.preservedParentSheetIndex.Value.ToString();
       }
       return null;
     }

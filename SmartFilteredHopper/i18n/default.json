@@ -3,6 +3,8 @@
     "config.enable-debug.tooltip": "Enable detailed debug logging. Disable for cleaner console output.",
     "config.compare-quality": "Compare Quality",
     "config.compare-quality.tooltip": "If enabled, filters will check item quality as well as item ID",
+    "config.compare-artifact-source": "Compare Artifact Source",
+    "config.compare-artifact-source.tooltip": "If enabled, filters will check the source of artisan goods (e.g., starfruit wine vs ancient fruit wine). Disable to transfer all variants of the same preserve type.",
     "config.transfer-interval": "Transfer Interval",
     "config.transfer-interval.tooltip": "How often the item transfer logic runs in frames (1 = every frame, 60 = every second)",
     "config.grab-automate-chest-group": "Connect Automate Chest Group",

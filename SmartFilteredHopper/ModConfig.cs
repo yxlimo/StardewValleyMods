@@ -8,6 +8,7 @@ namespace SmartFilteredHopper {
 
     public int LogLevel { get; set; }
     public bool CompareQuality { get; set; }
+    public bool CompareArtifactSource { get; set; }
     public int TransferInterval { get; set; }
     public bool GrabAutomateChestGroup { get; set; }
 
@@ -20,6 +21,7 @@ namespace SmartFilteredHopper {
     public void Reset() {
       this.LogLevel = 0;
       this.CompareQuality = false;
+      this.CompareArtifactSource = true;
       this.TransferInterval = 360;
       this.GrabAutomateChestGroup = false;
     }
@@ -52,6 +54,14 @@ namespace SmartFilteredHopper {
           tooltip: () => helper.Translation.Get("config.compare-quality.tooltip"),
           getValue: () => this.CompareQuality,
           setValue: value => this.CompareQuality = value
+      );
+
+      this.configMenu.AddBoolOption(
+          mod: manifest,
+          name: () => helper.Translation.Get("config.compare-artifact-source"),
+          tooltip: () => helper.Translation.Get("config.compare-artifact-source.tooltip"),
+          getValue: () => this.CompareArtifactSource,
+          setValue: value => this.CompareArtifactSource = value
       );
 
       this.configMenu.AddNumberOption(
