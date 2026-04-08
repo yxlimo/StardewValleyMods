@@ -46,7 +46,6 @@ namespace SmartFilteredHopper.LocationManager {
           continue;
         }
         this.transferItem(item);
-        this.ctx.Info($"Transferred {item.Name}:{item.QualifiedItemId} to {this.Output.TileLocation}");
       }
     }
 
@@ -86,30 +85,15 @@ namespace SmartFilteredHopper.LocationManager {
     /// 转移物品到目标箱
     /// </summary>
     private bool transferItem(Item item) {
-      string artifactSourceID = Utill.GetPreserveTypeID(item);
       var newItem = item.getOne();
       newItem.Stack = item.Stack;
-      // newItem.Quality = item.Quality;
+      Item remaining = this.Output.addItem(newItem);
 
-      // if (!string.IsNullOrEmpty(artifactSourceID)) {
-      //   StardewValley.Object processedItem = new(artifactSourceID, 1);
-      //   var flavoredVariant = Utill.GetFlavoredObjectVariant(item as StardewValley.Object, processedItem);
-      //   this.ctx.Trace($"transferItem: item={item.Name}({item.QualifiedItemId}), artifactSource={artifactSourceID}, flavoredVariant={flavoredVariant?.Item?.Name ?? "null"}");
-      //   newItem = flavoredVariant?.CreateItem();
-      //   if (newItem != null) {
-      //     newItem.Stack = item.Stack;
-      //     newItem.Quality = item.Quality;
-      //   }
-      // } else {
-      //   newItem = ItemRegistry.Create(item.QualifiedItemId, item.Stack, item.Quality);
-      // }
+      int transferred = remaining != null ? item.Stack - remaining.Stack : item.Stack;
+      this.ctx.Info($"transferItem: {item.Name}:{item.QualifiedItemId} to output({this.Output.TileLocation}), transferred={transferred}/{item.Stack}");
 
-      if (this.Output.addItem(newItem) != null) {
-        return false;
-      }
-
-      this.InputGroup.RemoveItem(item, item.Stack);
-      return true;
+      this.InputGroup.RemoveItem(item, transferred);
+      return transferred > 0;
     }
 
     /// <summary>

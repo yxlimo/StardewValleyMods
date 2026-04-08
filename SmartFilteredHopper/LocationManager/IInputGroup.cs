@@ -51,8 +51,7 @@ namespace SmartFilteredHopper.LocationManager {
     }
 
     public void RemoveItem(Item item, int count) {
-      var items = this.chest.GetItemsForPlayer(this.chest.owner.Value);
-      items.Remove(item);
+      Utill.RemoveItemFromChest(this.chest, item, count);
     }
   }
 
@@ -91,30 +90,36 @@ namespace SmartFilteredHopper.LocationManager {
 
     public List<Chest> Chests => this.chests;
 
+    /// <summary>
+    /// 获取可用的 chest 列表（排除 Automate Disable 的箱子）
+    /// </summary>
+    private IEnumerable<Chest> GetChests() {
+      foreach (var chest in this.chests) {
+        if (chest.modData.TryGetValue("Pathoschild.Automate/StoreItems", out var storeValue) && storeValue == "Disable") {
+          continue;
+        }
+        yield return chest;
+      }
+    }
+
     public bool Contains(Chest chest) {
       return this.chests.Contains(chest);
     }
 
     public List<Item> GetItems() {
       var items = new List<Item>();
-      foreach (var chest in this.chests) {
-        // Skip chests that Automate is configured not to pull from
-        // "Disable" means "Never put items in this chest" in Automate config
-        if (chest.modData.TryGetValue("Pathoschild.Automate/StoreItems", out var storeValue) && storeValue == "Disable") {
-          continue;
-        }
+      foreach (var chest in this.GetChests()) {
         items.AddRange(chest.GetItemsForPlayer(chest.owner.Value));
       }
       return items;
     }
 
     public void RemoveItem(Item item, int count) {
-      foreach (var chest in this.chests) {
-        var chestItems = chest.GetItemsForPlayer(chest.owner.Value);
-        if (chestItems.Contains(item)) {
-          chestItems.Remove(item);
+      foreach (var chest in this.GetChests()) {
+        int remaining = Utill.RemoveItemFromChest(chest, item, count);
+        if (remaining <= 0)
           return;
-        }
+        count = remaining;
       }
     }
 

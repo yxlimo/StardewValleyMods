@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
@@ -7,6 +8,28 @@ using StardewValley.Objects;
 
 namespace SmartFilteredHopper.LocationManager {
   internal static class Utill {
+
+    /// <summary>
+    /// 从 chest 中移除物品，返回未成功移除的数量
+    /// </summary>
+    public static int RemoveItemFromChest(Chest chest, Item item, int count) {
+      var items = chest.GetItemsForPlayer(chest.owner.Value);
+      int removeRemaining = count;
+
+      while (removeRemaining > 0) {
+        int idx = items.IndexOf(item);
+        if (idx < 0)
+          return removeRemaining;
+        if (removeRemaining < items[idx].Stack) {
+          items[idx].Stack -= removeRemaining;
+          return 0;
+        }
+        removeRemaining -= items[idx].Stack;
+        items.RemoveAt(idx);
+      }
+
+      return removeRemaining;
+    }
 
     /// <summary>
     /// 判断是否为有风味来源的工匠物品（酒、果酱、果汁、腌菜、蜂蜜、鱼子等）
