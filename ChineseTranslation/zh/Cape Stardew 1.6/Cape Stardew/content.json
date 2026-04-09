@@ -1,0 +1,1892 @@
+{
+  "Format": "2.8.0",
+  "ConfigSchema": {
+    "AmbientLightPatches": {
+      "AllowValues": "Dim, Dark, Vanilla",
+      "Default": "Vanilla",
+      "Description": "关闭星露角洞穴中的黑暗环境照明。"
+    },
+    "SmallDockAtCape": {
+      "AllowValues": "On, Off",
+      "Default": "On",
+      "Description": "在海岬上增设了一个小型码头。"
+    },
+    "TimeBasedMapPatches": {
+      "AllowValues": "On, Off",
+      "Default": "Off",
+      "Description": "会在特定时间对地图进行更新，通常是为了更改设置。这可能会导致游戏运行速度变慢。"
+    },
+    "RingsBalance": {
+      "AllowValues": "Vanilla, Stronger",
+      "Default": "Vanilla",
+      "Description": "设置找到的戒指的效果。"
+    },
+    "WeaponsBalance": {
+      "AllowValues": "Vanilla, Balanced, Stronger",
+      "Default": "Vanilla",
+      "Description": "设置所获得武器的威力。"
+    },
+    "MuseumCompatConfig": {
+      "AllowValues": "ExtraMuseumRoomVer2, VMVMuseumPatch, JasperNPCMuseumPatch, ExtraMuseumRoomGlassVer2, VMVMuseumPatchGlass, JasperNPCMuseumPatchGlass, None",
+      "Default": "JasperNPCMuseumPatch",
+      "Description": "将摩莉甘的默认头像切换掉",
+    },
+    "ExtraMuseumRoom": {
+      "AllowValues": "ExtraMuseumRoom, ExtraMuseumRoomGlass, None",
+      "Default": "ExtraMuseumRoom",
+      "Description": "在图书馆下方新增了一个博物馆展厅。"
+    },
+    "BusStopBuildings": {
+      "AllowValues": "true, false",
+      "Default": "true",
+      "Description": "解锁海角巴士站作为可建造区域"
+    },
+    "RingBuffsGlow": {
+      "AllowValues": "true, false",
+      "Default": "true",
+      "Description": "定制戒指闪耀着光芒"
+    },
+    "Custom_Ores": {
+      "AllowValues": "true, false",
+      "Default": "true",
+      "Description": "一种新的定制矿石，其中包含来自星露海角的钻石"
+    },
+    "Enable_Cape_Minecart": {
+      "AllowValues": "true, false",
+      "Default": "true",
+      "Description": "探索海洞后会出现矿车"
+    },
+    "ReimaginedForestPatch": {
+      "AllowValues": "on, off",
+      "Default": "on"
+    },
+    "VanillaForestPatch": {
+      "AllowValues": "on, off",
+      "Default": "on"
+    },
+    "ExpandedForestPatch": {
+      "AllowValues": "on, off",
+      "Default": "on"
+    },
+    "Green Fall": {
+      "AllowValues": "true, false",
+      "Default": "true"
+    },
+    "BoatDockedAtBeach": {
+      "AllowValues": "true, false",
+      "Default": "true",
+      "Description": "解锁后，海滩上的船将被禁用"
+    },
+    "RepeatFallingCutscene": {
+      "AllowValues": "true, false",
+      "Default": "true"
+    },
+    "BusAtCape": {
+      "AllowValues": "on, off",
+      "Default": "off",
+      "Description": "禁用海角处的巴士。"
+    },
+    "AllowWildAnimals": {
+      "AllowValues": "on, off",
+      "Default": "off",
+      "Description": "通过 Wild Animals mod 允许野生动物出现在海角上。"
+    },
+    "Enable Legendary Fish Cape": {
+      "AllowValues": "true, false",
+      "Default": "false",
+      "Description": "外面会出现传说中的鱼。"
+    },
+    "Enable Legendary Fish SeaCave": {
+      "AllowValues": "true, false",
+      "Default": "false",
+      "Description": "里面会出现传说中的鱼。"
+    },
+    "ShadowStrikeProjectile": {
+      "AllowValues": "on, off",
+      "Default": "on"
+    },
+    "MossyDewProjectile": {
+      "AllowValues": "on, off",
+      "Default": "on"
+    },
+    "WitherHollowProjectile": {
+      "AllowValues": "on, off",
+      "Default": "on"
+    }
+  },
+  "DynamicTokens": [
+    {
+      "Name": "SecretBaseWallExploded",
+      "Value": "{{HasFlag: anyPlayer |contains=SecretBase_ExplosionTriggered}}",
+    },
+    {
+      "Name": "SecretWallExploded",
+      "Value": "{{HasFlag: anyPlayer |contains=CapeCavingMagicWarp}}",
+    },
+    {
+      "Name": "CustomOresEnabled",
+      "Value": "{{Custom_Ores: hostPlayer |contains=true}}",
+      "When": {
+        "HasMod |contains=dreamy.CapeOreNodes": "true"
+      }
+    },
+    {
+      "Name": "DLXForest",
+      "Value": "{{HasFlag: anyPlayer |contains=DLX.Bundles.cape.capeforestfarm}}",
+      "When": {
+        "HasMod |contains=DLX.Bundles": "true"
+      }
+    },
+    {
+      "Name": "DLXCabin",
+      "Value": "{{HasFlag: anyPlayer |contains=DLX.Bundles.cape.cabin}}",
+      "When": {
+        "HasMod |contains=DLX.Bundles": "true"
+      }
+    },
+    {
+      "Name": "DLXBridge",
+      "Value": "{{HasFlag: anyPlayer |contains=capebridgeFix}}",
+      "When": {
+        "HasMod |contains=DLX.Bundles": "true"
+      }
+    },
+    {
+      "Name": "EssenceComplete",
+      "Value": "{{HasFlag: currentPlayer, hostPlayer, anyPlayer |contains=essence1}}"
+    },
+    {
+      "Name": "AnnettaCoastalOrder",
+      "Value": "{{HasFlag: currentPlayer, hostPlayer, anyPlayer |contains=AnetCoastalOrder}}"
+    },
+    {
+      "Name": "SecretBaseMultiplayer",
+      "Value": "{{HasSeenEvent: anyPlayer |contains=1463577799}}"
+    },
+    {
+      "Name": "UnlockSecretBase",
+      "Value": "{{HasSeenEvent: anyPlayer |contains=14635333}}"
+    },
+    {
+      "Name": "PokefyCape",
+      "Value": "{{HasMod: currentPlayer, hostPlayer, anyPlayer |contains=StravaJD.Pokefy}}"
+    },
+    {
+      "Name": "SecretCaveUnlocked",
+      "Value": "{{HasSeenEvent: anyPlayer |contains=14635120}}"
+    },
+    {
+      "Name": "SecretCaveKeyUnlocked",
+      "Value": "{{HasFlag: anyPlayer |contains=secretcavekey}}"
+    },
+    {
+      "Name": "SomeoneUnlockedBoat",
+      "Value": "{{HasSeenEvent: anyPlayer |contains=14635104}}"
+    },
+    {
+      "Name": "JelliWarper",
+      "Value": "{{HasSeenEvent: anyPlayer |contains=146353398}}"
+    },
+    {
+      "Name": "JWarp",
+      "Value": "{{HasFlag: anyPlayer |contains=Jelliwarp}}"
+    },
+    {
+      "Name": "SeaCavernCombatant",
+      "Value": "{{HasFlag: anyPlayer |contains=seaCombat1}}"
+    },
+    {
+      "Name": "JelliLunar",
+      "Value": "{{HasFlag: anyPlayer |contains=prettyStone1}}"
+    },
+    {
+      "Name": "AnetSpringOrdercomplete",
+      "Value": "{{HasFlag: currentPlayer, hostPlayer, anyPlayer |contains=AnetSpringOrder}}"
+    }
+  ],
+  "CustomLocations": [
+    /*CustomLocations///*/
+    {
+      "Name": "Custom_CapeMineForest",
+      "FromMapFile": "assets/CapeMineForest.tmx"
+    },
+    {
+      "Name": "Custom_forestpoolexit",
+      "FromMapFile": "assets/forestpoolexit.tmx"
+    },
+    {
+      "Name": "Custom_SeaCavernDepths",
+      "FromMapFile": "assets/SeaCavernDepths.tmx"
+    },
+    {
+      "Name": "Custom_SeaCavernDepths2",
+      "FromMapFile": "assets/SeaCavernDepths2.tmx"
+    },
+    {
+      "Name": "Custom_SeaCavernDepths3",
+      "FromMapFile": "assets/SeaCavernDepths3.tmx"
+    },
+    {
+      "Name": "Custom_SeaCavernDepths4",
+      "FromMapFile": "assets/SeaCavernDepths4.tmx"
+    },
+    {
+      "Name": "Custom_SeaCavernDepths5",
+      "FromMapFile": "assets/SeaCavernDepths5.tmx"
+    },
+    {
+      "Name": "Custom_SeaCavernDepthSecret",
+      "FromMapFile": "assets/SeaCavernDepthSecret.tmx"
+    },
+    {
+      "Name": "Custom_SeaCavernDepths6",
+      "FromMapFile": "assets/SeaCavernDepths6.tmx"
+    },
+    {
+      "Name": "Custom_CapeIslandEntry",
+      "FromMapFile": "assets/CapeIslandEntry.tmx"
+    },
+    {
+      "Name": "Custom_CapeIslandLadder",
+      "FromMapFile": "assets/CapeIslandLadder.tmx"
+    },
+    {
+      "Name": "Custom_TunnelCape",
+      "FromMapFile": "assets/TunnelCape.tmx"
+    },
+    {
+      "Name": "Custom_Cape",
+      "FromMapFile": "assets/CapeCave.tmx"
+    },
+    {
+      "Name": "Custom_CapeCaveLit",
+      "FromMapFile": "assets/CapeCaveLit.tmx"
+    },
+    {
+      "Name": "Custom_CapeSecretBaseDropArea",
+      "FromMapFile": "assets/CapeSecretBaseDropArea.tmx"
+    },
+    {
+      "Name": "Custom_CapeSecretBaseDropAreaScene",
+      "FromMapFile": "assets/CapeSecretBaseDropAreaScene.tmx"
+    },
+    {
+      "Name": "Custom_CapeBusStop",
+      "FromMapFile": "assets/CapeBusStop.tmx"
+    },
+    {
+      "Name": "Custom_CapeBusStop2",
+      "FromMapFile": "assets/CapeBusStop2.tmx"
+    },
+    {
+      "Name": "Custom_AnnettaFireplace",
+      "FromMapFile": "assets/AnnettaFireplace.tmx"
+    },
+    {
+      "Name": "Custom_CapeBeachPlank",
+      "FromMapFile": "assets/CapeStardewBeachPlank.tmx"
+    },
+    {
+      "Name": "Custom_CapeMeadowForestSouth",
+      "FromMapFile": "assets/MeadowForestSouth.tmx"
+    },
+    {
+      "Name": "Custom_CapeStardewBoatShore",
+      "FromMapFile": "assets/CapeStardewBoatShore.tmx"
+    },
+    {
+      "Name": "Custom_CapeStardewDockCustom",
+      "FromMapFile": "assets/CapeStardewDockCustom.tmx"
+    },
+    {
+      "Name": "Custom_AnnettaHouse",
+      "FromMapFile": "assets/CapeHouse.tmx"
+    },
+    {
+      "Name": "Custom_AbandonedHauntedHouse",
+      "FromMapFile": "assets/CapeAbandoned.tmx"
+    },
+    {
+      "Name": "Custom_SecretBase",
+      "FromMapFile": "assets/CapeSecretBase.tmx"
+    },
+    {
+      "Name": "Custom_RealSecretBase",
+      "FromMapFile": "assets/RealSecretBase.tmx"
+    },
+    {
+      "Name": "Custom_RealSecretBase2",
+      "FromMapFile": "assets/RealSecretBase2.tmx"
+    },
+    {
+      "Name": "Custom_CapeKeyMaze",
+      "FromMapFile": "assets/CapeKeyMaze.tmx"
+    },
+    {
+      "Name": "Custom_CapeKeyMaze2",
+      "FromMapFile": "assets/CapeKeyMaze2.tmx"
+    },
+    {
+      "Name": "Custom_CapeKeyMaze3",
+      "FromMapFile": "assets/CapeKeyMaze3.tmx"
+    },
+    {
+      "Name": "Custom_CapeKeyMaze4",
+      "FromMapFile": "assets/CapeKeyMaze4.tmx"
+    },
+    {
+      "Name": "Custom_CapeKeyMaze5",
+      "FromMapFile": "assets/CapeKeyMaze5.tmx"
+    },
+    {
+      "Name": "Custom_RealSecretBase2Unlocked",
+      "FromMapFile": "assets/RealSecretBase2Unlocked.tmx"
+    },
+    {
+      "Name": "Custom_AreaSecretBoss",
+      "FromMapFile": "assets/AreaSecretBoss.tmx"
+    },
+    {
+      "Name": "Custom_AreaSecretBossLvl2",
+      "FromMapFile": "assets/AreaSecretBossLvl2.tmx"
+    },
+    {
+      "Name": "Custom_AreaSecretBossLvl3",
+      "FromMapFile": "assets/AreaSecretBossLvl3.tmx"
+    },
+    {
+      "Name": "Custom_SecretBaseRoom",
+      "FromMapFile": "assets/CapeSecretBaseRoom.tmx"
+    },
+    {
+      "Name": "Custom_SecretBase2",
+      "FromMapFile": "assets/CapeSecretBase2ndArea.tmx"
+    },
+    {
+      "Name": "Custom_CapeStardew",
+      "FromMapFile": "assets/CapeStardew.tmx"
+    },
+    {
+      "Name": "Custom_CapeStardewScene",
+      "FromMapFile": "assets/CapeStardewScene.tmx"
+    },
+    {
+      "Name": "Custom_AnnettaForest",
+      "FromMapFile": "assets/NewAnnettasHouseEntrySouth.tmx"
+    },
+    {
+      "Name": "Custom_RowBoatentry",
+      "FromMapFile": "assets/Boat.tbin"
+    },
+    {
+      "Name": "Custom_CindersapEntry",
+      "FromMapFile": "assets/CindersapForestEntryAnnetta.tmx"
+    },
+    {
+      "Name": "Custom_CapeDinnerTime",
+      "FromMapFile": "assets/CapeHouseDinner.tbin"
+    },
+    {
+      "Name": "Custom_ForestLostSketchbook",
+      "FromMapFile": "assets/Forestsketchbook.tbin"
+    },
+    {
+      "Name": "Custom_Sketchbookfound",
+      "FromMapFile": "assets/Sketchbookfound.tbin"
+    },
+    {
+      "Name": "Custom_BusStationed",
+      "FromMapFile": "assets/BusStationed.tbin"
+    },
+    {
+      "Name": "Custom_ForestExpandedNew",
+      "FromMapFile": "assets/ForestExpandedEntrance.tmx"
+    },
+    {
+      "Name": "Custom_CapeCaving",
+      "FromMapFile": "assets/CapeCaving.tmx"
+    },
+    {
+      "Name": "Custom_CapeCavingSecretroom",
+      "FromMapFile": "assets/CapeCavingSecretroom.tmx"
+    },
+    {
+      "Name": "Custom_CapeCavingSecretroomWarpsLadderUnlock",
+      "FromMapFile": "assets/CapeCavingSecretroomWarpsLadderUnlock.tmx"
+    },
+    {
+      "Name": "Custom_CapeMossy",
+      "FromMapFile": "assets/CapeMossy.tmx"
+    },
+    {
+      "Name": "Custom_CapeCavingSecretroomWarps",
+      "FromMapFile": "assets/CapeCavingSecretroomWarps.tmx"
+    },
+    {
+      "Name": "Custom_CapeCavingArea2",
+      "FromMapFile": "assets/CapeCavingArea2.tmx"
+    },
+    {
+      "Name": "Custom_CapeCavingArea3",
+      "FromMapFile": "assets/CapeCavingArea3.tmx"
+    },
+    {
+      "Name": "Custom_BoatNightMarket",
+      "FromMapFile": "assets/Boat-NightMarket.tbin"
+    },
+    {
+      "Name": "Custom_BoatEvents",
+      "FromMapFile": "assets/Boat-Events.tbin"
+    },
+    {
+      "Name": "Custom_AnnettaUpstairs",
+      "FromMapFile": "assets/CapeHouse2ndroom.tmx"
+    },
+    {
+      "Name": "Custom_AnnettaUpstairsBalcony",
+      "FromMapFile": "assets/upstairsBalconyentry.tmx"
+    },
+    {
+      "Name": "Custom_CapeTreasureRoom",
+      "FromMapFile": "assets/CapeTreasureRoom.tmx"
+    },
+    {
+      "Name": "Custom_CapeScene",
+      "FromMapFile": "assets/CapeCaveScene.tmx"
+    },
+    {
+      "Name": "Custom_CapeCaveWarp",
+      "FromMapFile": "assets/CapeCaveWarp.tmx"
+    },
+    {
+      "Name": "Custom_SeaCape",
+      "FromMapFile": "assets/SeaCape.tmx"
+    },
+    {
+      "Name": "Custom_DarkCave",
+      "FromMapFile": "assets/DarkCave.tmx"
+    },
+    {
+      "Name": "Custom_DarkCave2",
+      "FromMapFile": "assets/DarkCave2.tmx"
+    },
+    {
+      "Name": "Custom_DarkCave3",
+      "FromMapFile": "assets/DarkCave3.tmx"
+    },
+    {
+      "Name": "Custom_DarkCave4",
+      "FromMapFile": "assets/DarkCave4.tmx"
+    },
+    {
+      "Name": "Custom_DarkCave3Unlock",
+      "FromMapFile": "assets/DarkCave3Unlock.tmx"
+    },
+    {
+      "Name": "Custom_DarkCave3Unlocktbin",
+      "FromMapFile": "assets/DarkCave3Unlock.tbin"
+    },
+    {
+      "Name": "Custom_CapeYrisBuilding",
+      "FromMapFile": "assets/CapeStardewYris.tmx"
+    },
+    {
+      "Name": "Custom_SeaCaveSecrets",
+      "FromMapFile": "assets/SeaCaveSecrets.tmx"
+    },
+    {
+      "Name": "Custom_AreaSecretTrapRoom",
+      "FromMapFile": "assets/AreaSecretTrapRoom.tmx"
+    },
+    {
+      "Name": "Custom_AreaSecretCalibur",
+      "FromMapFile": "assets/AreaSecretCalibur.tmx"
+    },
+    {
+      "Name": "Custom_UnlockSecretBase",
+      "FromMapFile": "assets/UnlockSecretBase.tmx"
+    },
+    {
+      "Name": "Custom_CapeSecretBasebroken",
+      "FromMapFile": "assets/CapeSecretBasebroken.tmx"
+    },
+    {
+      "Name": "Custom_CapeSecretBasePersistent",
+      "FromMapFile": "assets/CapeSecretBasePersistent.tmx"
+    },
+    {
+      "Name": "Custom_CapeCavingWallPatch",
+      "FromMapFile": "assets/CapeCavingWallPatch.tmx"
+    },
+    {
+      "Name": "Custom_CapeAbandonedFixed",
+      "FromMapFile": "assets/CapeAbandonedFixed.tmx"
+    },
+    {
+      "Name": "Custom_CapeStardewcabinfixed",
+      "FromMapFile": "assets/CapeStardewcabinfixed.tmx"
+    },
+    {
+      "Name": "Custom_CapeForest",
+      "FromMapFile": "assets/CapeForest.tmx"
+    },
+    {
+      "Name": "Custom_CapeForestHomestead",
+      "FromMapFile": "assets/CapeForestHomestead.tmx"
+    },
+    {
+      "Name": "Custom_AreaSecretBossLvl4",
+      "FromMapFile": "assets/AreaSecretBossLvl4.tmx"
+    },
+    {
+      "Name": "Custom_CapeMineCartOn",
+      "FromMapFile": "assets/CapeMineCartOn.tmx"
+    },
+    {
+      "Name": "Custom_CapeMineCart",
+      "FromMapFile": "assets/CapeMineCart.tmx"
+    },
+    {
+      "Name": "Custom_CapeMineCartScene",
+      "FromMapFile": "assets/CapeMineCartScene.tmx"
+    }
+  ],
+  "Changes": [
+    {
+      "LogName": "Morrigan NPC",
+      "Action": "Include",
+      "FromFile": "Data/CharacterData/NPCData/Morrigan/NPCData.json"
+    },
+    {
+      "LogName": "Morrigan NPC 2",
+      "Action": "Include",
+      "FromFile": "Data/CharacterData/NPCData/Morrigan/Characters.json"
+    },
+    /*//CustomTiles////*/
+    {
+      "Action": "Load",
+      "Target": "Maps/Cape_glasscases",
+      "FromFile": "assets/TileSheets/Cape_glasscases.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_Tiles",
+      "FromFile": "assets/TileSheets/Custom_Tiles.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/cabinstuff",
+      "FromFile": "assets/Tilesheets/cabinstuff.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/CapeBusTiles",
+      "FromFile": "assets/TileSheets/CapeBusTiles.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CaveTiles",
+      "FromFile": "assets/TileSheets/Custom_CaveTiles.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/watertiles",
+      "FromFile": "assets/TileSheets/watertiles.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/cavetreasure",
+      "FromFile": "assets/TileSheets/cavetreasure.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/CustomBuildings",
+      "FromFile": "assets/TileSheets/CustomBuildings.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/MineCartAnimation",
+      "FromFile": "assets/TileSheets/MineCartAnimation.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/StarblueRecolorCompat",
+      "FromFile": "assets/TileSheets/StarblueRecolorCompat.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/StarblueRecolorCompatWinter",
+      "FromFile": "assets/TileSheets/StarblueRecolorCompatWinter.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/AnnettaHouseSprites",
+      "FromFile": "assets/TileSheets/AnnettaHouseSprites.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/PastoralCapeGreenFall",
+      "FromFile": "assets/TileSheets/PastoralCapeGreenFall.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/capebuildings",
+      "FromFile": "assets/TileSheets/capebuildings.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/capebuildings_winter",
+      "FromFile": "assets/TileSheets/capebuildings_winter.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/capebuildings_fall",
+      "FromFile": "assets/TileSheets/capebuildings_fall.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/capeyrisbuildings",
+      "FromFile": "assets/TileSheets/capeyrisbuildings.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/spring_fixedhouse",
+      "FromFile": "assets/TileSheets/spring_fixedhouse.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/summer_fixedhouse",
+      "FromFile": "assets/TileSheets/summer_fixedhouse.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/fall_fixedhouse",
+      "FromFile": "assets/TileSheets/fall_fixedhouse.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/winter_fixedhouse",
+      "FromFile": "assets/TileSheets/winter_fixedhouse.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/CaveLitTiles",
+      "FromFile": "assets/TileSheets/CaveLitTiles.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "TileSheets/ghostball",
+      "FromFile": "assets/TileSheets/ghostball.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "TileSheets/ghostball2",
+      "FromFile": "assets/TileSheets/ghostball2.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "TileSheets/capeprojectiles",
+      "FromFile": "assets/TileSheets/capeprojectiles.png"
+    },
+    {
+      "Action": "EditImage",
+      "Target": "TileSheets/Projectiles",
+      "PatchMode": "Overlay",
+      "FromFile": "assets/TileSheets/capeprojectiles.png",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 128,
+        "Height": 112
+      },
+      "ToArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 128,
+        "Height": 112
+      }
+    },
+    {
+      "LogName": "CapeStringsCSFiles",
+      "Action": "EditData",
+      "Target": "Strings/StringsFromCSFiles",
+      "Entries": {
+        "Caperescue.001": "{{i18n:Strings.CapeRescue.001}}"
+      }
+    },
+    {
+      "LogName": "Message",
+      "Action": "EditData",
+      "Target": "Strings/StringsFromMaps",
+      "Entries": {
+        "Annettahouse.1": "{{i18n:Strings.Annettahouse.1}}",
+        "Annettahouse.2": "{{i18n:Strings.Annettahouse.2}}",
+        "Annettahouse.3": "{{i18n:Strings.Annettahouse.3}}",
+        "Annettahouse.6": "{{i18n:Strings.Annettahouse.6}}",
+        "Annettahouse.7": "{{i18n:Strings.Annettahouse.7}}",
+        "Annettahouse.8": "{{i18n:Strings.Annettahouse.8}}",
+        "Annettahouse.9": "{{i18n:Strings.Annettahouse.9}}",
+        "Annettahouse.10": "{{i18n:Strings.Annettahouse.10}}",
+        "Annettahouse.11": "{{i18n:Strings.Annettahouse.11}}",
+        "Annettahouse.12": "{{i18n:Strings.Annettahouse.12}}",
+        "Annettahouse.13": "{{i18n:Strings.Annettahouse.13}}",
+        "Annettahouse.14": "{{i18n:Strings.Annettahouse.14}}",
+        "Annettahouse.15": "{{i18n:Strings.Annettahouse.15}}",
+        "Annettahouse.17": "{{i18n:Strings.Annettahouse.17}}",
+        "Annettahouse.19": "{{i18n:Strings.Annettahouse.19}}",
+        "Annettahouse.30": "{{i18n:Strings.Annettahouse.30}}",
+        "AnnettaForest.1": "{{i18n:Strings.AnnettaForest.1}}",
+        "AnnettaCave.10": "{{i18n:Strings.AnnettaCave.10}}",
+        "Annettaupstairs.1": "{{i18n:Strings.Annettaupstairs.1}}",
+        "Annettaupstairs.2": "{{i18n:Strings.Annettaupstairs.2}}",
+        "Annettaupstairs.3": "{{i18n:Strings.Annettaupstairs.3}}",
+        "Annettaupstairs.4": "{{i18n:Strings.Annettaupstairs.4}}",
+        "Annettaupstairs.tv": "{{i18n:Strings.Annettaupstairs.tv}}",
+        "Cape.1": "{{i18n:Strings.Cape.1}}",
+        "Cape.2": "= {{i18n:Strings.Cape.2}} =^",
+        "Cape.3": "{{i18n:Strings.Cape.3}}",
+        "CapeMinehint.1": "{{i18n:Strings.CapeMinehint.1}}",
+        "Cape.current": "{{i18n:Strings.Cape.current}}",
+        "Cape.4": "{{i18n:Strings.Cape.4}}",
+        "Cave.1": "{{i18n:Strings.Cave.1}}",
+        "Cape.SecretHint": "{{i18n:Strings.Cape.SecretHint}}",
+        "Abandoned.1": "{{i18n:Strings.Abandoned.1}}",
+        "Abandoned.2": "{{i18n:Strings.Abandoned.2}}",
+        "cape.forest.1": "^= {{i18n:Strings.cape.forest.1}} = ^",
+        "Capeboatlocked.1": "{{i18n:Strings.Capeboatlocked.1}}",
+        "BusStopclosed.1": "{{i18n:Strings.BusStopclosed.1}}",
+        "BusStopclosed.2": "{{i18n:Strings.BusStopclosed.2}}",
+        "BusStopclosed.3": "{{i18n:Strings.BusStopclosed.3}}",
+        "DarkCave.1": "{{i18n:Strings.DarkCave.1}}",
+        "WallCrumble.1": "{{i18n:Strings.WallCrumble.1}}",
+        "Piratesnote.1": "{{i18n:Strings.Piratesnote.1}}",
+        "Piratesnote.2": "{{i18n:Strings.Piratesnote.2}}",
+        "Minecart1": "{{i18n:Strings.Minecart1}}",
+        "MineCaveCart": "{{i18n:ringevent.002}}",
+        "CapeDebrisblocked": "{{i18n:CapeDebris.blocked}}",
+        "Jellinote.1": "{{i18n:Strings.Jellinote.1}}",
+      }
+    }
+    /*/EventsBlanksJSON///*/ ,
+    {
+      //BlankCapeCavingSecretroom//
+      "LogName": "Load Blank BlankCapeCavingSecretroom",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_CapeCavingSecretroom",
+      "FromFile": "Data/LoadData/BlankCapeCavingSecretroom.json"
+    },
+    {
+      "LogName": "Load Blank CapeIslandEntry",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_CapeIslandEntry",
+      "FromFile": "Data/LoadData/BlankCapeIslandEntry.json"
+    },
+    {
+      "LogName": "Load Blank RealSecretBase",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_RealSecretBase",
+      "FromFile": "Data/LoadData/BlankRealSecretBase.json"
+    },
+    {
+      "LogName": "Load Blank RealSecretBase2",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_RealSecretBase2",
+      "FromFile": "Data/LoadData/BlankRealSecretBase2.json"
+    },
+    {
+      "LogName": "Load Blank RealSecretBase2",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_RealSecretBase2Unlocked",
+      "FromFile": "Data/LoadData/BlankRealSecretBase2Unlocked.json"
+    },
+    {
+      "LogName": "Load Blank CapeKeyMaze",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_CapeKeyMaze",
+      "FromFile": "Data/LoadData/BlankCapeKeyMaze.json"
+    },
+    {
+      "LogName": "Load Blank CapeForest",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_CapeForest",
+      "FromFile": "Data/LoadData/BlankCapeForest.json"
+    },
+    {
+      "LogName": "Load Blank CapeMineForest",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_CapeMineForest",
+      "FromFile": "Data/LoadData/BlankCapeMineForest.json"
+    },
+    {
+      "LogName": "Load Blank CapeMinecart",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_CapeMineCart",
+      "FromFile": "Data/LoadData/BlankCapeMineCart.json"
+    },
+    {
+      "LogName": "Load Blank SecretBASE",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_SecretBase",
+      "FromFile": "Data/LoadData/BlankSecretBase.json"
+    },
+    {
+      "LogName": "Load Blank A House",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_AbandonedHauntedHouse",
+      "FromFile": "Data/LoadData/BlankAbandonedHouse.json"
+    },
+    {
+      "LogName": "Load Blank Secretunlock",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_UnlockSecretBase",
+      "FromFile": "Data/LoadData/BlankSecretCaveUnlock.json"
+    },
+    {
+      "LogName": "Load Blank Sea Cave Events",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_Cape",
+      "FromFile": "Data/LoadData/BlankCape.json"
+    },
+    {
+      "LogName": "Load Blank Dark Cave Events",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_DarkCave3",
+      "FromFile": "Data/LoadData/BlankDarkCave3.json"
+    },
+    {
+      "LogName": "Load Blank Dark Cave 2",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_DarkCave2",
+      "FromFile": "Data/LoadData/BlankDarkCave2.json"
+    },
+    {
+      "LogName": "Load Blank Drop Area",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_CapeSecretBaseDropArea",
+      "FromFile": "Data/LoadData/BlankCapeSecretBaseDropArea.json"
+    },
+    {
+      "LogName": "Load Blank Drop Area 2",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_CapeSecretBaseDropAreaScene",
+      "FromFile": "Data/LoadData/BlankCapeSecretBaseDropAreaScene.json"
+    },
+    {
+      "LogName": "Load Blank Drop Areatraproom",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_AreaSecretTrapRoom",
+      "FromFile": "Data/LoadData/BlankAreaSecretTrapRoom.json"
+    },
+    {
+      "LogName": "Load Blank Capecaving",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_CapeCavingArea3",
+      "FromFile": "Data/LoadData/BlankCapeCavingArea3.json"
+    },
+    {
+      "LogName": "Load Blank Capecaving",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_CapeCaving",
+      "FromFile": "Data/LoadData/BlankCapeCaving.json"
+    },
+    {
+      "LogName": "Load Blank SCDepths2",
+      "Action": "Load",
+      "Target": "Data/Events/Custom_SeaCavernDepths2",
+      "FromFile": "Data/LoadData/BlankSCDepths2.json"
+    }
+    /*/TileSheetChanges// */
+    /*///Buildingfix///*/ ,
+    {
+      "Action": "EditImage",
+      "Target": "Maps/capebuildings",
+      "FromFile": "Assets/Tilesheets/capebuildings_fall.png",
+      "When": {
+        "Season": "Fall"
+      }
+    },
+    {
+      "Action": "EditImage",
+      "Target": "Maps/capebuildings",
+      "FromFile": "Assets/Tilesheets/capebuildings_winter.png",
+      "When": {
+        "Season": "Winter"
+      }
+    },
+    {
+      "Action": "EditImage",
+      "Target": "Maps/spring_fixedhouse",
+      "FromFile": "Assets/Tilesheets/winter_fixedhouse.png",
+      "When": {
+        "Season": "Winter"
+      },
+      "PatchMode": "Replace"
+    }
+    /*/eventmisc//*/ ,
+    {
+      "Action": "EditImage",
+      "Target": "Maps/springobjects",
+      "PatchMode": "Overlay",
+      "FromFile": "assets/TileSheets/secretkeyitem.png",
+      "ToArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 384,
+        "Height": 624
+      },
+      "When": {
+        "LocationName |contains=Custom_DarkCave3": true
+      },
+      "Update": "OnLocationChange"
+    },
+    {
+      "Action": "EditImage",
+      "Target": "Maps/springobjects",
+      "PatchMode": "Overlay",
+      "FromFile": "assets/TileSheets/secretkeyitem.png",
+      "ToArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 384,
+        "Height": 624
+      },
+      "When": {
+        "LocationName |contains=Custom_CapeKeyMaze": true
+      },
+      "Update": "OnLocationChange"
+    }
+    /*/LoadData///*/ ,
+    {
+      "Action": "Load",
+      "Target": "Custom_AreaSecretTrapRoomWarpUnlock",
+      "FromFile": "assets/AreaSecretTrapRoomWarpUnlock.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeMineForest",
+      "FromFile": "assets/CapeMineForest.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_forestpoolexit",
+      "FromFile": "assets/forestpoolexit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_SeaCavernDepths",
+      "FromFile": "assets/SeaCavernDepths.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_SeaCavernDepths2",
+      "FromFile": "assets/SeaCavernDepths2.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_SeaCavernDepths3",
+      "FromFile": "assets/SeaCavernDepths3.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_SeaCavernDepths4",
+      "FromFile": "assets/SeaCavernDepths4.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_SeaCavernDepths5",
+      "FromFile": "assets/SeaCavernDepths5.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_SeaCavernDepthSecret",
+      "FromFile": "assets/SeaCavernDepthSecret.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_SeaCavernDepths6",
+      "FromFile": "assets/SeaCavernDepths6.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeIslandEntry",
+      "FromFile": "assets/CapeIslandEntry.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeIslandLadder",
+      "FromFile": "assets/CapeIslandLadder.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_TunnelCape",
+      "FromFile": "assets/TunnelCape.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_Cape",
+      "FromFile": "assets/CapeCave.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeCaveLit",
+      "FromFile": "assets/CapeCaveLit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeSecretBaseDropArea",
+      "FromFile": "assets/CapeSecretBaseDropArea.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeSecretBaseDropAreaScene",
+      "FromFile": "assets/CapeSecretBaseDropAreaScene.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeBusStop",
+      "FromFile": "assets/CapeBusStop.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeBusStop2",
+      "FromFile": "assets/CapeBusStop2.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_AnnettaFireplace",
+      "FromFile": "assets/AnnettaFireplace.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeBeachPlank",
+      "FromFile": "assets/CapeStardewBeachPlank.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeMeadowForestSouth",
+      "FromFile": "assets/MeadowForestSouth.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeStardewBoatShore",
+      "FromFile": "assets/CapeStardewBoatShore.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeStardewDockCustom",
+      "FromFile": "assets/CapeStardewDockCustom.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_AnnettaHouse",
+      "FromFile": "assets/CapeHouse.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_AbandonedHauntedHouse",
+      "FromFile": "assets/CapeAbandoned.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_SecretBase",
+      "FromFile": "assets/CapeSecretBase.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_RealSecretBase",
+      "FromFile": "assets/RealSecretBase.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_RealSecretBase2",
+      "FromFile": "assets/RealSecretBase2.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeKeyMaze",
+      "FromFile": "assets/CapeKeyMaze.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeKeyMaze2",
+      "FromFile": "assets/CapeKeyMaze2.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeKeyMaze3",
+      "FromFile": "assets/CapeKeyMaze3.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeKeyMaze4",
+      "FromFile": "assets/CapeKeyMaze4.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeKeyMaze5",
+      "FromFile": "assets/CapeKeyMaze5.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_RealSecretBase2Unlocked",
+      "FromFile": "assets/RealSecretBase2Unlocked.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_AreaSecretBoss",
+      "FromFile": "assets/AreaSecretBoss.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_AreaSecretBossLvl2",
+      "FromFile": "assets/AreaSecretBossLvl2.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_AreaSecretBossLvl3",
+      "FromFile": "assets/AreaSecretBossLvl3.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_SecretBaseRoom",
+      "FromFile": "assets/CapeSecretBaseRoom.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_SecretBase2",
+      "FromFile": "assets/CapeSecretBase2ndArea.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeStardew",
+      "FromFile": "assets/CapeStardew.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeStardewScene",
+      "FromFile": "assets/CapeStardewScene.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_AnnettaForest",
+      "FromFile": "assets/NewAnnettasHouseEntrySouth.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_RowBoatentry",
+      "FromFile": "assets/Boat.tbin"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CindersapEntry",
+      "FromFile": "assets/CindersapForestEntryAnnetta.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeHouseDinner",
+      "FromFile": "assets/CapeHouseDinner.tbin"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeCavingSecretroomWarps",
+      "FromFile": "assets/CapeCavingSecretroomWarps.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeCavingSecretroomWarpsLadderUnlock",
+      "FromFile": "assets/CapeCavingSecretroomWarpsLadderUnlock.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeMossy",
+      "FromFile": "assets/CapeMossy.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_AreaSecretBossLvl4",
+      "FromFile": "assets/AreaSecretBossLvl4Warp.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_SummerCapeHouseDinner",
+      "FromFile": "assets/SummerCapeHouseDinner.tbin"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeDinnerTime",
+      "FromFile": "assets/CapeHouseDinner.tbin"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_ForestLostSketchbook",
+      "FromFile": "assets/Forestsketchbook.tbin"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_Sketchbookfound",
+      "FromFile": "assets/Sketchbookfound.tbin"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_BusStationed",
+      "FromFile": "assets/BusStationed.tbin"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_ForestExpandedNew",
+      "FromFile": "assets/ForestExpandedEntrance.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeCaving",
+      "FromFile": "assets/CapeCaving.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeCavingArea2",
+      "FromFile": "assets/CapeCavingArea2.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeCavingArea3",
+      "FromFile": "assets/CapeCavingArea3.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_BoatNightMarket",
+      "FromFile": "assets/Boat-NightMarket.tbin"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_BoatEvents",
+      "FromFile": "assets/Boat-Events.tbin"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_AnnettaUpstairs",
+      "FromFile": "assets/CapeHouse2ndroom.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_AnnettaUpstairsBalcony",
+      "FromFile": "assets/upstairsBalconyentry.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeTreasureRoom",
+      "FromFile": "assets/CapeTreasureRoom.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeScene",
+      "FromFile": "assets/CapeCaveScene.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeCaveWarp",
+      "FromFile": "assets/CapeCaveWarp.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_SeaCape",
+      "FromFile": "assets/SeaCape.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_DarkCave",
+      "FromFile": "assets/DarkCave.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_DarkCave2",
+      "FromFile": "assets/DarkCave2.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_DarkCave3",
+      "FromFile": "assets/DarkCave3.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_DarkCave4",
+      "FromFile": "assets/DarkCave4.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_DarkCave3Unlock",
+      "FromFile": "assets/DarkCave3Unlock.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_DarkCave3Unlocktbin",
+      "FromFile": "assets/DarkCave3Unlock.tbin"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeYrisBuilding",
+      "FromFile": "assets/CapeStardewYris.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_SeaCaveSecrets",
+      "FromFile": "assets/SeaCaveSecrets.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_AreaSecretTrapRoom",
+      "FromFile": "assets/AreaSecretTrapRoom.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_AreaSecretCalibur",
+      "FromFile": "assets/AreaSecretCalibur.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_UnlockSecretBase",
+      "FromFile": "assets/UnlockSecretBase.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeSecretBasebroken",
+      "FromFile": "assets/CapeSecretBasebroken.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeSecretBasePersistent",
+      "FromFile": "assets/CapeSecretBasePersistent.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeCavingWallPatch",
+      "FromFile": "assets/CapeCavingWallPatch.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeAbandonedFixed",
+      "FromFile": "assets/CapeAbandonedFixed.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeStardewcabinfixed",
+      "FromFile": "assets/CapeStardewcabinfixed.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeForest",
+      "FromFile": "assets/CapeForest.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeForestHomestead",
+      "FromFile": "assets/CapeForestHomestead.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_AreaSecretBossLvl4",
+      "FromFile": "assets/AreaSecretBossLvl4.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeMineCartOn",
+      "FromFile": "assets/CapeMineCartOn.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeMineCart",
+      "FromFile": "assets/CapeMineCart.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Custom_CapeMineCartScene",
+      "FromFile": "assets/CapeMineCartScene.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/capebussprite",
+      "FromFile": "assets/TileSheets/capebussprite.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/secretbasethings",
+      "FromFile": "assets/TileSheets/secretbasethings.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeCaveLit",
+      "FromFile": "assets/CapeCaveLit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeCaveWarp",
+      "FromFile": "assets/CapeCaveWarp.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeStardewElle",
+      "FromFile": "assets/CapeStardewElle.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_AreaSecretBossLit",
+      "FromFile": "assets/AreaSecretBossLit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_DarkCaveLit",
+      "FromFile": "assets/DarkCaveLit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_Caperockpatch",
+      "FromFile": "assets/Caperockpatch.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_DarkCave2Lit",
+      "FromFile": "assets/DarkCave2Lit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_AreaSecretBossLvl2Lit",
+      "FromFile": "assets/AreaSecretBossLvl2Lit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_SecretBase",
+      "FromFile": "assets/CapeSecretBaseLit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeCavingArea1Lit",
+      "FromFile": "assets/CapeCavingArea1Lit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeCavingArea2Lit",
+      "FromFile": "assets/CapeCavingArea2Lit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeForestHomestead",
+      "FromFile": "assets/CapeForestHomestead.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeSecretBaseDropAreaLit",
+      "FromFile": "assets/CapeSecretBaseDropAreaLit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeBusStopBuildable",
+      "FromFile": "assets/CapeBusStopBuildable.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeSecretBaseRoomLit",
+      "FromFile": "assets/CapeSecretBaseRoomLit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeSecretBase2ndAreaLit",
+      "FromFile": "assets/CapeSecretBase2ndAreaLit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_UnlockSecretBaseLit",
+      "FromFile": "assets/UnlockSecretBaseLit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_DarkCave3Lit",
+      "FromFile": "assets/DarkCave3Lit.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_AreaSecretBossLvl4Fixed",
+      "FromFile": "assets/AreaSecretBossLvl4Fixed.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeMineCart",
+      "FromFile": "assets/CapeMineCart.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeMineCartOn",
+      "FromFile": "assets/CapeMineCartOn.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeMineCartScene",
+      "FromFile": "assets/CapeMineCartScene.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeHouse2patch",
+      "FromFile": "assets/CapeHouse2patch.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_Capewhirlpoolforest",
+      "FromFile": "assets/Capewhirlpoolforest.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_Capewhirlpoolbeach",
+      "FromFile": "assets/Capewhirlpoolbeach.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeBusStop2patch",
+      "FromFile": "assets/CapeBusStop2patch.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_CapeMineForest",
+      "FromFile": "assets/CapeMineForest.tmx"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Custom_SeaCavernDepths2note",
+      "FromFile": "assets/SeaCavernDepths2note.tmx"
+    },
+    /*/includedata///*/
+    {
+      "LogName": "Temporary Event Characters",
+      "Action": "Include",
+      "FromFile": "Data/CharacterData/NPCData/EventChars/EventNpcs.json",
+    },
+    {
+      "LogName": "minecartdataforcape",
+      "Action": "Include",
+      "FromFile": "Data/CapeMineCartData.json"
+    },
+    {
+      "LogName": "Jelli NPC Characters4",
+      "Action": "Include",
+      "FromFile": "Data/CharacterData/NPCData/Jelli/Characters.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Data/SpecialOrders.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Data/CraftingRecipes.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Data/CapeShops.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Data/CustomAudio.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Data/SpecialOrders.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Data/MapUpdates.json,Data/MapChanges.json,Data/MusicChanges.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Data/Events/CapeEvents.json,Data/Events/SeaCavernDepths.json,Data/ConversationTopics.json,Data/CapeMail.json,Data/CapeRecipes.json,Data/CapeLocationData.json,Data/schedulechanges.json,Data/EventLookupData.json,Data/RecolorData.json,Data/CustomChairs.json,Data/TriggerActions.json"
+    },
+    {
+      "LogName": "Include Cape Quest Data",
+      "Action": "Include",
+      "FromFile": "Data/Quests/Quests.json,Data/Quests/JelliQuests.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Data/CharacterData/MonsterData/ExtraMonsters.json"
+    },
+    {
+      "Action": "Include",
+      "When": {
+        "HasMod |contains=DLX.Bundles": true
+      },
+      "FromFile": "Data/UBdata.json"
+    },
+    {
+      "Action": "Include",
+      "When": {
+        "HasMod |contains=DLX.Bundles": true
+      },
+      "FromFile": "Data/CapeUnlockableBundles.json"
+    },
+    {
+      "Action": "Include",
+      "When": {
+        "HasMod |contains=mistyspring.ItemExtensions": true
+      },
+      "FromFile": "Data/ItemExtensionData.json"
+    },
+    {
+      "Action": "Include",
+      "When": {
+        "HasMod |contains=DLX.Bundles": true
+      },
+      "FromFile": "Data/Events/UBEvents.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Data/CCData.json",
+      "When": {
+        "HasMod": "PeacefulEnd.CustomCompanions"
+      }
+    },
+    ///SwimModPatches///
+    {
+      "Action": "Include",
+      "When": {
+        "HasMod |contains=FlyingTNT.Swim": true
+      },
+      "FromFile": "Data/SwimModPatches.json"
+    }
+    /*/////ExtraNPC///*/ ,
+    {
+      "Action": "Load",
+      "Target": "Characters/Dialogue/Jelli",
+      "FromFile": "Data/Blank.json"
+    },
+    {
+      "Action": "Load",
+      "Target": "Strings/schedules/Jelli",
+      "FromFile": "Data/Blank.json"
+    },
+    {
+      "LogName": "Include Extra NPC",
+      "Action": "Include",
+      "FromFile": "Data/CharacterData/NPCData/Jelli/JelliNpc.json"
+    }
+    /*//CUSTOMITEMS///*/ ,
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Beach Strawberry/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Frozen Beach Strawberry/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/BioLuminescent Mycena/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Blue Diamond/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Celestial Crystal/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Corn Silk/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Cuachalalate Bark/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Fire Diamond/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Gold Pocket Watch/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Green Tea Mochi/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Heart Diamond/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Legacy Aged Rum Wine/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Lunar Crystal Shard/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Pomegranate Mochi/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Pretty Stone/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Rosa Rugosa/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Rosy Harmony Tea/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Secret Cave Key/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Shavegrass/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Sticky Rice Flour/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/TotoroPlush/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Uva Ursi/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Weapons/Golden Obsidian Blade/weapon.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Weapons/Shadow Strike Blade/weapon.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Weapons/MossyDew/weapon.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Weapons/WitherHollow/weapon.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Hats/Captains Seafarer Hat/hat.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Hats/Mermaids Veil/hat.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/RevitaliTea/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Sea Crystal Flask/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/SeaCapeWarpTotem/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Cape Warp Totem/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "BigCraftables/Celestial Prism/big-craftable.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "BigCraftables/Luminescent Prism/big-craftable.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "BigCraftables/Radiant Prism/big-craftable.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Sketchbook/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Mystic Arcana/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Silver Petal/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Endless Ember/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Sky Oak/object.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Objects/Gumi Sweet Rice/object.json"
+    }
+    /*includedata//*/ ,
+    {
+      "Action": "Include",
+      "FromFile": "Data/CustomBuffs.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Data/ItemsGiftTastes.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "Data/FurniData.json"
+    }
+    /*/shoptiledata//*/ ,
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Custom_SeaCavernDepths2",
+      "Update": "OnLocationChange",
+      "MapTiles": [
+        {
+          "Position": {
+            "X": 28,
+            "Y": 16
+          },
+          "Layer": "Buildings",
+          "SetProperties": {
+            "Action": "OpenShop dreamy.kickitspot_jellishop none 0600 1600 27 14 5 5"
+          }
+        }
+      ]
+    },
+    {
+      "LogName": "Vendor Portraits",
+      "Action": "Load",
+      "Target": "Portraits/JelliVendor,",
+      "FromFile": "assets/Characters/Portraits/JelliVendor.png"
+    },
+  ],
+  "RepeatEvents": [
+    1463578773,
+    1463578774,
+    1463578776,
+    1463578772,
+    1463578777,
+    1463579778,
+    1463571771,
+    1463572774,
+    1463574772,
+    1463575777,
+    1463576776,
+    1463579779,
+    146358523,
+    146358081,
+    146358082,
+    146358083,
+    146358084,
+    146358085,
+    146350031,
+    146357855,
+    14635852
+  ]
+}

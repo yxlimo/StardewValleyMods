@@ -32,6 +32,9 @@ _releases/
 
 # claude settings
 .claude/settings.local.json
+*/.claude/settings.local.json
+.remember
+skills/
 
 # local scripts
 scripts/
@@ -39,3 +42,8 @@ scripts/
 # playwright
 .playwright
 .playwright-cli/
+
+# ChineseTranslation project
+ChineseTranslation/origin
+ChineseTranslation/node_modules/
+ChineseTranslation/.agents/skills/
