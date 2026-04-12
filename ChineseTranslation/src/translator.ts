@@ -18,15 +18,17 @@ import {
   getTranslatedKeysFromManifest,
   getNewTranslationKeys,
 } from "./diff";
-import type { ModConfig, FileEntry, FileType, TranslationResult } from "./types";
+import { translateBatch } from "./llm";
+import { FileType } from "./types";
+import type { ModConfig, FileEntry, TranslationResult } from "./types";
 
 /**
  * 翻译单个文件
  */
-export function translateFile(
+export async function translateFile(
   baseDir: string,
   entry: FileEntry
-): TranslationResult {
+): Promise<TranslationResult> {
   const fileType = getFileType(entry.file);
   const originPath = getOriginPath(baseDir, entry.file);
   const targetPath = getTargetPath(baseDir, entry.target);
@@ -42,10 +44,10 @@ export function translateFile(
   try {
     switch (fileType) {
       case FileType.I18nDefault:
-        translateI18nFile(originPath, targetPath, result);
+        await translateI18nFile(originPath, targetPath, result);
         break;
       case FileType.Json:
-        translateJsonFile(
+        await translateJsonFile(
           baseDir,
           originPath,
           targetPath,
@@ -77,12 +79,13 @@ export function translateFile(
 /**
  * 翻译 i18n/default.json 文件
  * 基于旧版本增量更新
+ * 注意：i18n/default.json 是扁平 key-value 结构，直接用 key 访问
  */
-function translateI18nFile(
+export async function translateI18nFile(
   originPath: string,
   targetPath: string,
   result: TranslationResult
-): void {
+): Promise<void> {
   const originData = readJsonFile<Record<string, unknown>>(originPath);
   const targetData = readJsonFile<Record<string, unknown> | null>(targetPath);
 
@@ -98,17 +101,37 @@ function translateI18nFile(
   // 如果有差异，复制旧文件并更新差异部分
   let outputData = targetData ? { ...targetData } : {};
 
+  // 收集需要翻译的 key-value 对
+  const keysToTranslate: string[] = [];
+  const valuesToTranslate: string[] = [];
+  const keyValueMap = new Map<string, string>();
+
   for (const key of diffKeys) {
-    const value = getValueByPath(originData, key);
-    if (value !== undefined) {
-      setValueByPath(outputData, key, value);
-      result.translatedCount++;
+    // i18n/default.json 是扁平结构，直接用 key 访问
+    const value = originData[key];
+    if (typeof value === "string" && value.trim()) {
+      keysToTranslate.push(key);
+      valuesToTranslate.push(value);
+      keyValueMap.set(key, value);
+    } else if (value !== undefined) {
+      // 非字符串值直接复制
+      outputData[key] = value;
     }
   }
 
-  // 如果有新增 key 或修改的 key，需要翻译
-  // 目前是直接复制原始值（假设原始文件已经是目标语言）
-  // TODO: 调用 LLM 翻译
+  // 调用 LLM 批量翻译
+  if (valuesToTranslate.length > 0) {
+    console.log(`Translating ${valuesToTranslate.length} keys via LLM...`);
+    const translations = await translateBatch(valuesToTranslate, "English", "Chinese");
+    for (let i = 0; i < keysToTranslate.length; i++) {
+      const key = keysToTranslate[i];
+      const translated = translations[i] || keyValueMap.get(key);
+      if (translated) {
+        outputData[key] = translated;
+        result.translatedCount++;
+      }
+    }
+  }
 
   writeJsonFile(targetPath, outputData);
   result.skippedCount = Object.keys(outputData).length - result.translatedCount;
@@ -118,13 +141,13 @@ function translateI18nFile(
  * 翻译普通 JSON 文件
  * 基于原始文件重新生成，通过 translation.json 记录已翻译的 key
  */
-function translateJsonFile(
+async function translateJsonFile(
   baseDir: string,
   originPath: string,
   targetPath: string,
   entry: FileEntry,
   result: TranslationResult
-): void {
+): Promise<void> {
   const originData = readJsonFile<Record<string, unknown>>(originPath);
   const manifest = loadTranslationManifest(baseDir);
 
@@ -144,24 +167,42 @@ function translateJsonFile(
   const outputData = deepClone(originData);
 
   if (entry.translateKeys && entry.translateKeys.length > 0) {
+    // 收集需要翻译的文本
+    const pathsToTranslate: string[] = [];
+    const valuesToTranslate: string[] = [];
+    const pathValueMap = new Map<string, string>();
+
     // 按指定 keys 翻译
     for (const keyPattern of entry.translateKeys) {
       const values = extractValuesByPath(originData, keyPattern);
       for (const [fullPath, value] of Object.entries(values)) {
         if (typeof value === "string" && value.trim()) {
-          // TODO: 调用 LLM 翻译
-          // 目前直接从 zh/ 中获取已翻译的值
+          // 先尝试从已翻译文件中获取
           if (existingTarget) {
             const translatedValue = getValueByPath(existingTarget, fullPath);
             if (translatedValue !== undefined) {
               setValueByPath(outputData, fullPath, translatedValue);
               result.translatedCount++;
-            } else {
-              result.skippedCount++;
+              continue;
             }
-          } else {
-            result.skippedCount++;
           }
+          // 需要 LLM 翻译
+          pathsToTranslate.push(fullPath);
+          valuesToTranslate.push(value);
+          pathValueMap.set(fullPath, value);
+        }
+      }
+    }
+
+    // 批量调用 LLM 翻译
+    if (valuesToTranslate.length > 0) {
+      const translations = await translateBatch(valuesToTranslate, "English", "Chinese");
+      for (let i = 0; i < pathsToTranslate.length; i++) {
+        const fullPath = pathsToTranslate[i];
+        const translated = translations[i] || pathValueMap.get(fullPath);
+        if (translated) {
+          setValueByPath(outputData, fullPath, translated);
+          result.translatedCount++;
         }
       }
     }

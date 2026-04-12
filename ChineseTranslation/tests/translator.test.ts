@@ -1,11 +1,19 @@
-import { describe, test, expect, beforeAll } from "bun:test";
+import { describe, test, expect, beforeAll, beforeEach, afterEach, afterAll } from "bun:test";
 import { resolve } from "node:path";
 import { readJsonFile, writeJsonFile, readTmxFile, writeTmxFile, extractFromTmx, replaceTmxPropertyValue } from "../src/fileHandler";
 import { computeJsonDiff, getTranslatedKeysFromManifest, getNewTranslationKeys } from "../src/diff";
 import { getFileType, loadConfig, loadTranslationManifest } from "../src/config";
-import { translateFile } from "../src/translator";
-import type { TranslationManifest } from "../src/types";
+import { translateFile, translateI18nFile } from "../src/translator";
+import type { TranslationManifest, TranslationResult } from "../src/types";
 import { FileType } from "../src/types";
+import {
+  setMockMode,
+  setMockTranslation,
+  clearMockTranslations,
+  translateWithLLM,
+  translateBatch,
+} from "../src/llm";
+import { existsSync, unlinkSync } from "node:fs";
 
 const RESOURCES = resolve("tests/resources");
 const ORIGIN_DIR = resolve(RESOURCES, "origin");
@@ -209,6 +217,56 @@ describe("diff", () => {
   });
 });
 
+describe("llm", () => {
+  beforeEach(() => {
+    setMockMode(true);
+    clearMockTranslations();
+  });
+
+  afterEach(() => {
+    setMockMode(false);
+    clearMockTranslations();
+  });
+
+  test("translateWithLLM returns mock translation in mock mode", async () => {
+    const result = await translateWithLLM("Hello", "English", "Chinese");
+    expect(result).toBe("[MOCK] Hello -> 中文翻译");
+  });
+
+  test("translateBatch returns mock translations in mock mode", async () => {
+    const texts = ["Hello", "World", "Test"];
+    const results = await translateBatch(texts, "English", "Chinese");
+    expect(results).toEqual([
+      "[MOCK] Hello -> 中文",
+      "[MOCK] World -> 中文",
+      "[MOCK] Test -> 中文",
+    ]);
+  });
+
+  test("translateBatch with custom mock translations", async () => {
+    setMockTranslation("Hello", "你好");
+    setMockTranslation("World", "世界");
+    setMockTranslation("Test", "测试");
+
+    const texts = ["Hello", "World", "Test"];
+    const results = await translateBatch(texts, "English", "Chinese");
+    expect(results).toEqual(["你好", "世界", "测试"]);
+  });
+
+  test("translateBatch returns empty array for empty input", async () => {
+    const results = await translateBatch([], "English", "Chinese");
+    expect(results).toEqual([]);
+  });
+
+  test("translateBatch uses fallback when no custom mock translation", async () => {
+    clearMockTranslations();
+    // mockTranslations is now empty, so it uses the default fallback
+    const texts = ["Hello", "Unknown"];
+    const results = await translateBatch(texts, "English", "Chinese");
+    expect(results).toEqual(["[MOCK] Hello -> 中文", "[MOCK] Unknown -> 中文"]);
+  });
+});
+
 describe("integration", () => {
   test("loadTranslationManifest loads manifest from test resources", () => {
     const manifest = loadTranslationManifest(resolve(ZH_DIR, "TestMod"));
@@ -252,5 +310,125 @@ describe("integration", () => {
     expect(output).toContain("再见玩家");
     expect(output).not.toContain("Hello player");
     expect(output).not.toContain("Goodbye player");
+  });
+});
+
+describe("translator with LLM", () => {
+  const TEST_ORIGIN = "/tmp/translator_llm_origin.json";
+  const TEST_ZH = "/tmp/translator_llm_zh.json";
+
+  beforeEach(() => {
+    setMockMode(true);
+    clearMockTranslations();
+    setMockTranslation("New key in updated version", "新项目");
+    setMockTranslation("Test string", "测试字符串");
+    setMockTranslation("Hello", "你好");
+    // 删除可能存在的目标文件，确保测试干净
+    if (existsSync(TEST_ZH)) {
+      unlinkSync(TEST_ZH);
+    }
+  });
+
+  afterEach(() => {
+    setMockMode(false);
+    clearMockTranslations();
+  });
+
+  test("translateI18nFile translates new keys with mock LLM", async () => {
+    const originData = {
+      "key1": "Value 1",
+      "key2": "Value 2",
+      "key3": "Value 3",
+      "key4": "New key in updated version",
+    };
+
+    // 不创建 zh 文件，模拟全新翻译场景 - 所有 key 都被视为新 key
+    writeJsonFile(TEST_ORIGIN, originData);
+
+    const result: TranslationResult = {
+      success: true,
+      file: "test",
+      translatedCount: 0,
+      skippedCount: 0,
+      errors: [],
+    };
+
+    await translateI18nFile(TEST_ORIGIN, TEST_ZH, result);
+
+    expect(result.success).toBe(true);
+    // 所有 4 个 key 都是新的（没有现有翻译文件）
+    expect(result.translatedCount).toBe(4);
+
+    const translatedData = readJsonFile<Record<string, string>>(TEST_ZH);
+    expect(translatedData).not.toBeNull();
+    // key4 有特定翻译映射
+    expect(translatedData!["key4"]).toBe("新项目");
+    // 其他 key 使用 fallback 翻译
+    expect(translatedData!["key1"]).toBe("[MOCK] Value 1 -> 中文");
+  });
+
+  test("translateI18nFile updates existing file with new keys", async () => {
+    const originData = {
+      "key1": "Value 1",
+      "key2": "Value 2",
+      "key3": "Value 3",
+      "key4": "New key in updated version",
+    };
+    const existingZhData = {
+      "key1": "值 1",
+      "key2": "值 2",
+    };
+
+    writeJsonFile(TEST_ORIGIN, originData);
+    writeJsonFile(TEST_ZH, existingZhData);
+
+    const result: TranslationResult = {
+      success: true,
+      file: "test",
+      translatedCount: 0,
+      skippedCount: 0,
+      errors: [],
+    };
+
+    await translateI18nFile(TEST_ORIGIN, TEST_ZH, result);
+
+    expect(result.success).toBe(true);
+    // key3 和 key4 是新 key
+    expect(result.translatedCount).toBe(2);
+
+    const translatedData = readJsonFile<Record<string, string>>(TEST_ZH);
+    expect(translatedData).not.toBeNull();
+    // 保留已有翻译
+    expect(translatedData!["key1"]).toBe("值 1");
+    expect(translatedData!["key2"]).toBe("值 2");
+  });
+
+  test("translateI18nFile handles non-string values", async () => {
+    const originData = {
+      "greeting": "Hello",
+      "count": 42,
+      "enabled": true,
+    };
+
+    writeJsonFile(TEST_ORIGIN, originData);
+
+    const result: TranslationResult = {
+      success: true,
+      file: "test",
+      translatedCount: 0,
+      skippedCount: 0,
+      errors: [],
+    };
+
+    await translateI18nFile(TEST_ORIGIN, TEST_ZH, result);
+
+    expect(result.success).toBe(true);
+    expect(result.translatedCount).toBe(1);
+
+    const translatedData = readJsonFile<Record<string, unknown>>(TEST_ZH);
+    expect(translatedData).not.toBeNull();
+    expect(translatedData!["greeting"]).toBe("你好");
+    expect(translatedData!["count"]).toBe(42);
+    expect(translatedData!["enabled"]).toBe(true);
   });
 });

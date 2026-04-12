@@ -28,7 +28,7 @@ async function main(): Promise<void> {
   const results: TranslationResult[] = [];
 
   for (const entry of config.files) {
-    const result = translateFile(config.baseDir, entry);
+    const result = await translateFile(config.baseDir, entry);
     results.push(result);
 
     const status = result.success ? "✓" : "✗";
