@@ -1,9 +1,10 @@
 import { describe, test, expect, beforeAll, beforeEach, afterEach, afterAll } from "bun:test";
 import { resolve } from "node:path";
-import { readJsonFile, writeJsonFile, readTmxFile, writeTmxFile, extractFromTmx, replaceTmxPropertyValue } from "../src/fileHandler";
+import { readJsonFile, writeJsonFile } from "../src/fileHandler";
 import { computeJsonDiff, getTranslatedKeysFromManifest, getNewTranslationKeys } from "../src/diff";
-import { getFileType, loadConfig, loadTranslationManifest } from "../src/config";
-import { translateFile, translateI18nFile } from "../src/translator";
+import { getFileType, loadConfig } from "../src/config";
+import { translateFile, translateI18nFile, translateJsonFile } from "../src/translator";
+import { query, updateAtPath } from "../src/query";
 import type { TranslationManifest, TranslationResult } from "../src/types";
 import { FileType } from "../src/types";
 import {
@@ -43,73 +44,214 @@ describe("fileHandler", () => {
     const result = readJsonFile<typeof testData>(path);
     expect(result).toEqual(testData);
   });
+});
 
-  test("readTmxFile reads TMX XML content", () => {
-    const tmxContent = `<?xml version="1.0" encoding="UTF-8"?>
-<map>
-  <objectgroup name="Objects">
-    <object id="1" name="TestObject">
-      <properties>
-        <property name="Dialogue" value="Hello World"/>
-      </properties>
-    </object>
-  </objectgroup>
-</map>`;
-    const path = "/tmp/test_translator.tmx";
-    writeTmxFile(path, tmxContent);
+describe("query", () => {
+  test("query handles top-level keys with dots using backticks", () => {
+    // i18n 文件中的 key 如 "Strings.SirensLog" 包含点但不是嵌套结构
+    // 用反引号包裹表示这是一个完整的 key
+    const data = {
+      "Strings.SirensLog": "Captain Siren's Log",
+      "Guild.CapeDinos.Name": "Dino Encounter",
+    };
 
-    const result = readTmxFile(path);
-    expect(result).not.toBeNull();
-    expect(result).toContain("Hello World");
-  });
-
-  test("extractFromTmx extracts Dialogue properties", () => {
-    const tmxContent = `<?xml version="1.0" encoding="UTF-8"?>
-<map>
-  <objectgroup name="Objects">
-    <object id="1" name="NPC1">
-      <properties>
-        <property name="Dialogue" value="Hello player"/>
-        <property name="OtherProp" value="Other value"/>
-      </properties>
-    </object>
-  </objectgroup>
-</map>`;
-
-    const results = extractFromTmx(tmxContent, "Dialogue");
+    const results = query(data, "`Strings.SirensLog`");
     expect(results.length).toBe(1);
-    expect(results[0].name).toBe("Dialogue");
-    expect(results[0].value).toBe("Hello player");
+    expect(results[0].path).toBe("Strings.SirensLog");
+    expect(results[0].value).toBe("Captain Siren's Log");
   });
 
-  test("extractFromTmx with wildcard pattern", () => {
-    const tmxContent = `<?xml version="1.0" encoding="UTF-8"?>
-<map>
-  <objectgroup name="Objects">
-    <object id="1" name="NPC1">
-      <properties>
-        <property name="Dialogue" value="Hello"/>
-        <property name="Dialogue2" value="World"/>
-      </properties>
-    </object>
-  </objectgroup>
-</map>`;
+  test("query handles top-level keys without dots", () => {
+    const data = {
+      "key1": "value1",
+      "key2": "value2",
+    };
 
-    const results = extractFromTmx(tmxContent, "Dialogue*");
-    expect(results.length).toBe(2);
+    const results = query(data, "key1");
+    expect(results.length).toBe(1);
+    expect(results[0].value).toBe("value1");
   });
 
-  test("replaceTmxPropertyValue replaces property value", () => {
-    const tmxContent = `<?xml version="1.0" encoding="UTF-8"?>
-<map>
-  <properties>
-    <property name="Dialogue" value="Original"/>
-  </properties>
-</map>`;
+  test("updateAtPath handles top-level keys with dots", () => {
+    const data = {
+      "Strings.SirensLog": "Captain Siren's Log",
+    };
 
-    const result = replaceTmxPropertyValue(tmxContent, "Dialogue", "Translated", "Original");
-    expect(result).toContain('value="Translated"');
-    expect(result).not.toContain('value="Original"');
+    const updated = updateAtPath(data, "Strings.SirensLog", "塞壬船长的日志");
+    expect(updated["Strings.SirensLog"]).toBe("塞壬船长的日志");
+  });
+
+  test("query handles nested paths", () => {
+    const data = {
+      Changes: [
+        {
+          Entries: {
+            CapeBusStop: {
+              ChooseDestinationMessage: "返回农场？",
+            },
+          },
+        },
+      ],
+    };
+
+    const results = query(data, "Changes(*).Entries.CapeBusStop.ChooseDestinationMessage");
+    expect(results.length).toBe(1);
+  });
+
+  test("query handles ConfigSchema-style nested paths", () => {
+    // ConfigSchema.AnnettaPortraitStyle.Description 是嵌套结构
+    // 不带反引号应该按嵌套路径处理
+    const data = {
+      ConfigSchema: {
+        AnnettaPortraitStyle: {
+          Description: "Switch the default portrait for Annetta",
+        },
+      },
+    };
+
+    const results = query(data, "ConfigSchema.AnnettaPortraitStyle.Description");
+    expect(results.length).toBe(1);
+    expect(results[0].path).toBe("ConfigSchema.AnnettaPortraitStyle.Description");
+    expect(results[0].value).toBe("Switch the default portrait for Annetta");
+  });
+
+  test("query without backticks splits by dots (nested path), with backticks treats as single key", () => {
+    // 不带反引号：按嵌套路径拆分
+    // 带反引号：作为完整 key 处理
+    const data = {
+      "ConfigSchema.Ann": "value1", // 顶级 key，包含点
+      ConfigSchema: {
+        Ann: "value2", // 嵌套路径
+      },
+    };
+
+    // 带反引号：作为完整 key "ConfigSchema.Ann"
+    const backtickResults = query(data, "`ConfigSchema.Ann`");
+    expect(backtickResults.length).toBe(1);
+    expect(backtickResults[0].value).toBe("value1");
+
+    // 不带反引号：作为嵌套路径 ConfigSchema.Ann
+    const nestedResults = query(data, "ConfigSchema.Ann");
+    expect(nestedResults.length).toBe(1);
+    expect(nestedResults[0].value).toBe("value2");
+  });
+
+  test("query handles deep nested paths with array wildcards", () => {
+    const data = {
+      Changes: [
+        {
+          Entries: {
+            CapeBusStop: {
+              ChooseDestinationMessage: "返回农场？",
+              LockedMessage: "暂停服务",
+            },
+          },
+        },
+        {
+          Entries: {
+            "dreamy.kickitspot_shop": {
+              ChooseDestinationMessage: "选择目的地：",
+            },
+          },
+        },
+      ],
+    };
+
+    const results = query(data, "Changes(*).Entries.CapeBusStop.ChooseDestinationMessage");
+    expect(results.length).toBe(1);
+    expect(results[0].value).toBe("返回农场？");
+  });
+
+  test("updateAtPath with backticks for key containing dots", () => {
+    const data = {
+      "ConfigSchema.Option.Description": "Original description",
+    };
+
+    const updated = updateAtPath(data, "`ConfigSchema.Option.Description`", "新描述");
+    expect(updated["ConfigSchema.Option.Description"]).toBe("新描述");
+  });
+
+  test("query returns empty for non-existent key", () => {
+    const data = {
+      key1: "value1",
+    };
+
+    const results = query(data, "nonexistent");
+    expect(results.length).toBe(0);
+  });
+
+  test("query with quoted key syntax for keys with special characters", () => {
+    const data = {
+      Changes: [
+        {
+          Entries: {
+            "dreamy.kickitspot_shop": {
+              Name: "Shop Name",
+            },
+          },
+        },
+      ],
+    };
+
+    const results = query(data, 'Changes(*).Entries["dreamy.kickitspot_shop"].Name');
+    expect(results.length).toBe(1);
+    expect(results[0].value).toBe("Shop Name");
+  });
+
+  test("simulates CapeStardew content.json ConfigSchema query scenario", () => {
+    // 模拟 [CP]Annetta/content.json 的 ConfigSchema 结构
+    const originData = {
+      ConfigSchema: {
+        AnnettaPortraitStyle: {
+          AllowValues: "Front, AlternativeFront, 3/4(original), None(other)",
+          Default: "Front",
+          Description: "Switch the default portrait for Annetta",
+        },
+      },
+    };
+
+    const zhData = {
+      ConfigSchema: {
+        AnnettaPortraitStyle: {
+          AllowValues: "Front, AlternativeFront, 3/4(original), None(other)",
+          Default: "Front",
+          Description: "切换 Annetta 的默认肖像",
+        },
+      },
+    };
+
+    // 查询 origin 中的 Description
+    const originResults = query(originData, "ConfigSchema.AnnettaPortraitStyle.Description");
+    expect(originResults.length).toBe(1);
+    expect(originResults[0].value).toBe("Switch the default portrait for Annetta");
+
+    // 查询 zh 中的 Description
+    const zhResults = query(zhData, "ConfigSchema.AnnettaPortraitStyle.Description");
+    expect(zhResults.length).toBe(1);
+    expect(zhResults[0].value).toBe("切换 Annetta 的默认肖像");
+
+    // 两者不同，说明已有翻译
+    expect(zhResults[0].value).not.toBe(originResults[0].value);
+  });
+
+  test("query handles multiple top-level keys with dots using backticks", () => {
+    const data = {
+      "Strings.SirensLog": "Log entry",
+      "Strings.OtherLog": "Other entry",
+      "Strings": {
+        NestedLog: "nested entry",
+      },
+    };
+
+    // 带反引号查顶级 key
+    const results1 = query(data, "`Strings.SirensLog`");
+    expect(results1.length).toBe(1);
+    expect(results1[0].value).toBe("Log entry");
+
+    // 不带反引号查嵌套
+    const results2 = query(data, "Strings.NestedLog");
+    expect(results2.length).toBe(1);
+    expect(results2[0].value).toBe("nested entry");
   });
 });
 
@@ -121,10 +263,6 @@ describe("config", () => {
   test("getFileType identifies JSON files", () => {
     expect(getFileType("content.json")).toBe(FileType.Json);
     expect(getFileType("Data/CapeShops.json")).toBe(FileType.Json);
-  });
-
-  test("getFileType identifies TMX files", () => {
-    expect(getFileType("assets/CapeHouse2ndroom.tmx")).toBe(FileType.Tmx);
   });
 
   test("loadConfig loads test config", () => {
@@ -268,12 +406,6 @@ describe("llm", () => {
 });
 
 describe("integration", () => {
-  test("loadTranslationManifest loads manifest from test resources", () => {
-    const manifest = loadTranslationManifest(resolve(ZH_DIR, "TestMod"));
-    expect(manifest).not.toBeNull();
-    expect(manifest!.version).toBe("1.0.0");
-  });
-
   test("i18n translation adds new keys from origin", () => {
     const originPath = resolve(ORIGIN_DIR, "TestMod/i18n/default.json");
     const zhPath = resolve(ZH_DIR, "TestMod/i18n/zh.json");
@@ -287,29 +419,6 @@ describe("integration", () => {
     // key4 存在于 origin 但不存在于 zh（新增）
     expect(Object.prototype.hasOwnProperty.call(originData, "key4")).toBe(true);
     expect(Object.prototype.hasOwnProperty.call(zhData, "key4")).toBe(false);
-  });
-
-  test("TMX translation extracts and replaces dialogue", () => {
-    const originContent = readTmxFile(resolve(ORIGIN_DIR, "TestMod/assets/map.tmx"));
-    const zhContent = readTmxFile(resolve(ZH_DIR, "TestMod/assets/map.tmx"));
-
-    expect(originContent).not.toBeNull();
-    expect(zhContent).not.toBeNull();
-
-    // 从 zh 提取翻译后的 Dialogue，同时获取 origin 中对应的旧值
-    const translatedItems = extractFromTmx(zhContent!, "Dialogue", originContent);
-    expect(translatedItems.length).toBe(2);
-
-    // 替换 origin 中的值
-    let output = originContent!;
-    for (const item of translatedItems) {
-      output = replaceTmxPropertyValue(output, item.name, item.value, item.oldValue);
-    }
-
-    expect(output).toContain("你好玩家");
-    expect(output).toContain("再见玩家");
-    expect(output).not.toContain("Hello player");
-    expect(output).not.toContain("Goodbye player");
   });
 });
 
@@ -403,6 +512,44 @@ describe("translator with LLM", () => {
     expect(translatedData!["key2"]).toBe("值 2");
   });
 
+  test("translateI18nFile preserves Chinese values when all keys match (diffKeys empty)", async () => {
+    // 当 origin 和 target 拥有相同 key（值也相同）时，diffKeys 为空
+    // 此时应保留 target 中的中文翻译，而非使用 origin 的英文值
+    const originData = {
+      "key1": "Hello",
+      "key2": "World",
+    };
+    const existingZhData = {
+      "key1": "你好",
+      "key2": "世界",
+    };
+
+    writeJsonFile(TEST_ORIGIN, originData);
+    writeJsonFile(TEST_ZH, existingZhData);
+
+    const result: TranslationResult = {
+      success: true,
+      file: "test",
+      translatedCount: 0,
+      skippedCount: 0,
+      errors: [],
+    };
+
+    await translateI18nFile(TEST_ORIGIN, TEST_ZH, result);
+
+    expect(result.success).toBe(true);
+    // 没有新 key 需要翻译
+    expect(result.translatedCount).toBe(0);
+    // 两个 key 都是已有翻译
+    expect(result.skippedCount).toBe(2);
+
+    const translatedData = readJsonFile<Record<string, string>>(TEST_ZH);
+    expect(translatedData).not.toBeNull();
+    // 必须保留中文翻译，不能是英文
+    expect(translatedData!["key1"]).toBe("你好");
+    expect(translatedData!["key2"]).toBe("世界");
+  });
+
   test("translateI18nFile handles non-string values", async () => {
     const originData = {
       "greeting": "Hello",
@@ -427,8 +574,76 @@ describe("translator with LLM", () => {
 
     const translatedData = readJsonFile<Record<string, unknown>>(TEST_ZH);
     expect(translatedData).not.toBeNull();
-    expect(translatedData!["greeting"]).toBe("你好");
+expect(translatedData!["greeting"]).toBe("你好");
     expect(translatedData!["count"]).toBe(42);
     expect(translatedData!["enabled"]).toBe(true);
+  });
+});
+
+describe("dataWithArray translation with location keys", () => {
+  const TEST_ORIGIN = resolve(ORIGIN_DIR, "TestMod/Data/dataWithArray.json");
+  const TEST_ZH = "/tmp/translator_dataWithArray_zh.json";
+  const TEST_CONFIG = resolve(CONFIG_DIR, "TestMod.json");
+
+  beforeEach(() => {
+    setMockMode(true);
+    clearMockTranslations();
+    setMockTranslation("EnglishMessageToTranslate", "已翻译消息");
+    if (existsSync(TEST_ZH)) {
+      unlinkSync(TEST_ZH);
+    }
+  });
+
+  afterEach(() => {
+    setMockMode(false);
+    clearMockTranslations();
+  });
+
+  test("translateJsonFile with location keys translates only target values", async () => {
+    const config = loadConfig(TEST_CONFIG);
+    const dataWithArrayEntry = config.files.find(
+      (f) => f.file === "Data/dataWithArray.json"
+    )!;
+
+    const result: TranslationResult = {
+      success: true,
+      file: dataWithArrayEntry.file,
+      translatedCount: 0,
+      skippedCount: 0,
+      errors: [],
+    };
+
+    await translateJsonFile(
+      "TestMod",
+      TEST_ORIGIN,
+      TEST_ZH,
+      dataWithArrayEntry,
+      result
+    );
+
+    expect(result.success).toBe(true);
+
+    const translatedData = readJsonFile<Record<string, unknown>>(TEST_ZH);
+    expect(translatedData).not.toBeNull();
+
+    // Changes is an array - verify structure is preserved
+    expect(Array.isArray(translatedData!.Changes)).toBe(true);
+
+    // CapeBusStop.ChooseDestinationMessage should be translated
+    const capeEntry = translatedData!.Changes[0].Entries.CapeBusStop;
+    expect(capeEntry.ChooseDestinationMessage).toBe("已翻译消息");
+
+    // dreamy.kickitspot_CapeSeaCavern entries should be translated
+    const seaCavernEntry = translatedData!.Changes[1].Entries["dreamy.kickitspot_CapeSeaCavern"];
+    expect(seaCavernEntry.LockedMessage).toBe("已翻译消息");
+    expect(seaCavernEntry.ChooseDestinationMessage).toBe("已翻译消息");
+
+    // jellishop Dialogue should be translated (value matches EnglishMessageToTranslate)
+    const jelliShopEntry = translatedData!.Changes[2].Entries["dreamy.kickitspot_jellishop"];
+    expect(jelliShopEntry.Owners[0].Dialogues[0].Dialogue).toBe("已翻译消息");
+
+    // jellishop2 should also have translated Dialogue
+    const jelliShop2Entry = translatedData!.Changes[2].Entries["dreamy.kickitspot_jellishop2"];
+    expect(jelliShop2Entry.Owners[0].Dialogues[0].Dialogue).toBe("已翻译消息");
   });
 });

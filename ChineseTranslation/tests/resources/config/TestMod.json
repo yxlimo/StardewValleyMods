@@ -11,9 +11,15 @@
       "translateKeys": ["ConfigSchema.Option1.Description"]
     },
     {
-      "file": "assets/map.tmx",
-      "target": "assets/map.tmx",
-      "translateKeys": ["Dialogue"]
+      "file": "Data/dataWithArray.json",
+      "target": "Data/dataWithArray.json",
+      "translateKeys": [
+        "Changes(*).Entries.CapeBusStop.ChooseDestinationMessage",
+        "Changes(*).Entries(@Id=dreamy.kickitspot_CapeSeaCavern).LockedMessage",
+        "Changes(*).Entries(@Id=dreamy.kickitspot_CapeSeaCavern).ChooseDestinationMessage",
+        "Changes(*).Entries(@Id=dreamy.kickitspot_jellishop).Owners(*).Dialogues(*).Dialogue",
+        "Changes(*).Entries(@Id=dreamy.kickitspot_jellishop2).Owners(*).Dialogues(*).Dialogue"
+      ]
     }
   ]
 }

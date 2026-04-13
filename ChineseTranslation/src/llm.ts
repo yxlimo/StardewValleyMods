@@ -1,8 +1,10 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { generateText } from "@cherrystudio/ai-core";
+import type { GenerateTextResult } from "@cherrystudio/ai-core";
 
 interface LLMConfig {
-  url: string;
+  baseURL: string;
   apiKey: string;
   model: string;
 }
@@ -60,43 +62,82 @@ function loadConfig(): LLMConfig {
     }
   }
 
+  const baseURL = envVars["ANTHROPIC_BASE_URL"];
+  const apiKey = envVars["ANTHROPIC_API_KEY"];
+  const model = envVars["ANTHROPIC_MODEL"];
+
+  if (!apiKey) {
+    throw new Error("ANTHROPIC_API_KEY is required in .env file");
+  }
+  if (!baseURL) {
+    throw new Error("ANTHROPIC_BASE_URL is required in .env file");
+  }
+  if (!model) {
+    throw new Error("ANTHROPIC_MODEL is required in .env file");
+  }
+
+  // 验证 URL 格式
+  try {
+    new URL(baseURL);
+  } catch {
+    throw new Error(`Invalid ANTHROPIC_BASE_URL: ${baseURL}`);
+  }
+
   config = {
-    url: envVars["OPENAI_URL"] || "https://api.kimi.com/coding/v1",
-    apiKey: envVars["OPENAI_API_KEY"] || "",
-    model: envVars["OPENAI_MODEL"] || "K2.5",
+    baseURL,
+    apiKey,
+    model,
   };
 
   return config;
 }
 
 /**
- * 调用 LLM API
+ * 调用 LLM API（带重试机制）
  */
 async function callLLM(messages: Array<{ role: string; content: string }>): Promise<string> {
   const cfg = loadConfig();
+  const maxRetries = 3;
+  const retryDelayMs = 1500;
 
-  const response = await fetch(`${cfg.url}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${cfg.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: cfg.model,
-      messages,
-    }),
-  });
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const result: GenerateTextResult = await generateText(
+        "anthropic",
+        {
+          apiKey: cfg.apiKey,
+          baseURL: cfg.baseURL,
+        },
+        {
+          model: cfg.model,
+          messages,
+        }
+      );
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`LLM API error: ${response.status} ${errorText}`);
+      return result.text;
+    } catch (e) {
+      // 检查是否是 529 overloaded 错误
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      if (errorMessage.includes("529") || errorMessage.includes("overloaded")) {
+        if (attempt < maxRetries) {
+          console.log(`  LLM server overloaded, retrying in ${retryDelayMs}ms... (${attempt + 1}/${maxRetries})`);
+          await sleep(retryDelayMs);
+          continue;
+        }
+      }
+      // 非 529 错误或其他错误已用完重试次数，直接抛出
+      throw e;
+    }
   }
 
-  const data = (await response.json()) as {
-    choices: Array<{ message: { content: string } }>;
-  };
+  throw new Error("LLM translation failed after max retries");
+}
 
-  return data.choices[0]?.message?.content || "";
+/**
+ * 睡眠函数
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -114,12 +155,8 @@ export async function translateWithLLM(
 
   const messages = [
     {
-      role: "system",
-      content: `You are a professional translator. Translate the following text from ${from} to ${to}. Only output the translation, nothing else.`,
-    },
-    {
       role: "user",
-      content: text,
+      content: `Translate the following text from ${from} to ${to}. Only output the translation, nothing else.\n\n${text}`,
     },
   ];
 
@@ -147,19 +184,12 @@ export async function translateBatch(
   }
 
   const cfg = loadConfig();
-
-  // Kimi API 支持批量，但为了简单起见，逐个翻译
-  // 如果文本较多，可以考虑合并为一个 prompt
   const combinedText = texts.map((t, i) => `${i + 1}. ${t}`).join("\n");
 
   const messages = [
     {
-      role: "system",
-      content: `You are a professional translator. Translate the following texts from ${from} to ${to}. Output ONLY the translations, one per line, in the same order. No numbering, no explanations.`,
-    },
-    {
       role: "user",
-      content: combinedText,
+      content: `Translate the following texts from ${from} to ${to}. Output ONLY the translations, one per line, in the same order. No numbering, no explanations.\n\n${combinedText}`,
     },
   ];
 

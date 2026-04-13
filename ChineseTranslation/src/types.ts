@@ -16,8 +16,10 @@ export interface FileEntry {
   target: string;
   /** 是否全量翻译 */
   translateAll?: boolean;
-  /** 使用 jsonpath 匹配的 key 列表 */
+  /** 使用 path 匹配的 key 列表（xpath-like 语法） */
   translateKeys?: string[];
+  /** 已翻译的 key-value 对（从 translation.json 合并） */
+  keys?: Record<string, string>;
 }
 
 /**
@@ -28,26 +30,8 @@ export enum FileType {
   I18nDefault = "i18n/default.json",
   /** JSON 文件 - 按 key 翻译 */
   Json = "json",
-  /** TMX 地图文件 - XML 格式 */
-  Tmx = "tmx",
   /** 其他文件 */
   Unknown = "unknown",
-}
-
-/**
- * translation.json 格式
- */
-export interface TranslationManifest {
-  version: string;
-  files: TranslationFileRecord[];
-}
-
-/**
- * 已翻译文件记录
- */
-export interface TranslationFileRecord {
-  file: string;
-  keys: string[];
 }
 
 /**
@@ -59,4 +43,21 @@ export interface TranslationResult {
   translatedCount: number;
   skippedCount: number;
   errors?: string[];
+}
+
+/**
+ * 翻译清单（translation.json）
+ * 用于跟踪已翻译的 keys
+ */
+export interface TranslationManifest {
+  version: string;
+  files: TranslationFileRecord[];
+}
+
+/**
+ * 翻译文件记录
+ */
+export interface TranslationFileRecord {
+  file: string;
+  keys: string[];
 }

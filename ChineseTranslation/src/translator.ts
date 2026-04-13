@@ -3,24 +3,267 @@ import {
   getOriginPath,
   getTargetPath,
   getFileType,
-  loadTranslationManifest,
 } from "./config";
+import { query } from "./query";
 import {
   readJsonFile,
   writeJsonFile,
-  readTmxFile,
-  writeTmxFile,
-  extractFromTmx,
-  replaceTmxPropertyValue,
+  readFileByType,
+  writeFileByType,
 } from "./fileHandler";
-import {
-  computeJsonDiff,
-  getTranslatedKeysFromManifest,
-  getNewTranslationKeys,
-} from "./diff";
+import { computeJsonDiff } from "./diff";
 import { translateBatch } from "./llm";
+import { getFileOperator, type FileOperator } from "./fileOperator";
 import { FileType } from "./types";
-import type { ModConfig, FileEntry, TranslationResult } from "./types";
+import type { FileEntry, TranslationResult } from "./types";
+
+/**
+ * 翻译条目（用于批量 LLM 调用）
+ */
+interface TranslationItem {
+  fileIndex: number;
+  path: string;
+  value: string;
+}
+
+/**
+ * 文件数据
+ */
+interface FileData {
+  entry: FileEntry;
+  fileType: FileType;
+  originData: unknown;
+  targetData: unknown;
+  outputData: unknown;
+  skippedCount: number;
+  translatedCount: number;
+}
+
+/**
+ * 翻译单个 mod 的所有文件到 staging 目录
+ * 一次性读取所有文件，比对出需要翻译的 key，调用一次 LLM 获取所有结果
+ */
+export async function translateAllToStaging(
+  baseDir: string,
+  files: FileEntry[],
+  stagingDir: string
+): Promise<TranslationResult[]> {
+  // Step 1: 收集所有文件数据，识别需要翻译的内容
+  const fileDataMap: FileData[] = [];
+  const itemsToTranslate: TranslationItem[] = [];
+
+  for (const entry of files) {
+    const fileType = getFileType(entry.file);
+    const originPath = getOriginPath(baseDir, entry.file);
+    const targetPath = getTargetPath(baseDir, entry.target);
+
+    const originData = readFileByType(originPath, fileType);
+    const targetData = readFileByType(targetPath, fileType);
+
+    let outputData: unknown = null;
+    let skippedCount = 0;
+
+    if (fileType === FileType.I18nDefault || fileType === FileType.Json) {
+      if (!originData) {
+        fileDataMap.push({
+          entry,
+          fileType,
+          originData,
+          targetData,
+          outputData: null,
+          skippedCount: 0,
+          translatedCount: 0,
+        });
+        continue;
+      }
+
+      outputData = deepClone(originData);
+      const operator = getFileOperator("json");
+
+      if (fileType === FileType.I18nDefault) {
+        // i18n 文件：使用 computeJsonDiff 找差异
+        const diffKeys = computeJsonDiff(
+          originData as Record<string, unknown>,
+          targetData as Record<string, unknown> | null
+        );
+
+        for (const key of diffKeys) {
+          const queryResults = operator.query(originData, key);
+          if (queryResults.length > 0) {
+            const { path: queryPath, value } = queryResults[0];
+            if (typeof value === "string" && value.trim()) {
+              itemsToTranslate.push({
+                fileIndex: fileDataMap.length,
+                path: queryPath,
+                value,
+              });
+            }
+          }
+        }
+
+        // 合并已有翻译（非 diffKeys 的部分）
+        if (targetData) {
+          const targetObj = targetData as Record<string, unknown>;
+          for (const key of Object.keys(targetObj)) {
+            if (diffKeys.has(key)) continue;
+            // 复制已有翻译（中文值）到 outputData
+            const value = targetObj[key];
+            if (typeof value === "string" && value.trim()) {
+              outputData = operator.update(outputData, key, value);
+              skippedCount++;
+            }
+          }
+        }
+      } else {
+        // 普通 JSON 文件：使用 translateKeys
+        if (entry.translateKeys && entry.translateKeys.length > 0) {
+          for (const keyPattern of entry.translateKeys) {
+            const queryResults = operator.query(originData, keyPattern);
+            for (const { path: queryPath, value } of queryResults) {
+              if (typeof value === "string" && value.trim()) {
+                // 检查是否已有翻译
+                if (targetData) {
+                  const existingValue = getValueByPath(targetData, queryPath);
+                  if (typeof existingValue === "string" && existingValue.trim()) {
+                    outputData = operator.update(outputData, queryPath, existingValue);
+                    skippedCount++;
+                    continue;
+                  }
+                }
+                // 需要翻译
+                itemsToTranslate.push({
+                  fileIndex: fileDataMap.length,
+                  path: queryPath,
+                  value,
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+
+    fileDataMap.push({
+      entry,
+      fileType,
+      originData,
+      targetData,
+      outputData,
+      skippedCount,
+      translatedCount: 0,
+    });
+  }
+
+  // Step 2: 调用 LLM 批量翻译
+  if (itemsToTranslate.length > 0) {
+    console.log(`Translating ${itemsToTranslate.length} items via LLM...`);
+
+    // 收集所有需要翻译的文本
+    const allTexts: string[] = [];
+    const textToItemMap = new Map<number, TranslationItem>();
+
+    for (const item of itemsToTranslate) {
+      allTexts.push(item.value);
+      textToItemMap.set(allTexts.length - 1, item);
+    }
+
+    // 一次性调用 LLM
+    const translations = await translateBatch(allTexts, "English", "Chinese");
+
+    // 应用翻译结果
+    for (let i = 0; i < allTexts.length; i++) {
+      const text = allTexts[i];
+      const translated = translations[i] || text;
+      const item = textToItemMap.get(i);
+
+      if (item) {
+        const operator = getFileOperator("json");
+        fileDataMap[item.fileIndex].outputData = operator.update(
+          fileDataMap[item.fileIndex].outputData,
+          item.path,
+          translated
+        );
+        fileDataMap[item.fileIndex].translatedCount++;
+      }
+    }
+  }
+
+  // Step 3: 写入所有文件到 staging
+  const results: TranslationResult[] = [];
+  for (const fileData of fileDataMap) {
+    const { entry, fileType, outputData } = fileData;
+
+    if (outputData === null) {
+      results.push({
+        success: false,
+        file: entry.file,
+        translatedCount: 0,
+        skippedCount: 0,
+        errors: [`Origin file not found`],
+      });
+      continue;
+    }
+
+    const stagingPath = path.join(stagingDir, baseDir, entry.target);
+    writeFileByType(stagingPath, outputData, fileType);
+
+    results.push({
+      success: true,
+      file: entry.file,
+      translatedCount: fileData.translatedCount,
+      skippedCount: fileData.skippedCount,
+      errors: [],
+    });
+  }
+
+  return results;
+}
+
+/**
+ * 翻译单个文件到 staging 目录
+ */
+export async function translateFileToStaging(
+  baseDir: string,
+  entry: FileEntry,
+  stagingDir: string
+): Promise<TranslationResult> {
+  const fileType = getFileType(entry.file);
+  const originPath = getOriginPath(baseDir, entry.file);
+  const stagingPath = path.join(stagingDir, baseDir, entry.target);
+
+  const result: TranslationResult = {
+    success: true,
+    file: entry.file,
+    translatedCount: 0,
+    skippedCount: 0,
+    errors: [],
+  };
+
+  try {
+    switch (fileType) {
+      case FileType.I18nDefault:
+        await translateI18nFile(originPath, stagingPath, result);
+        break;
+      case FileType.Json:
+        await translateJsonFile(
+          baseDir,
+          originPath,
+          stagingPath,
+          entry,
+          result
+        );
+        break;
+      default:
+        result.errors?.push(`Unsupported file type: ${fileType}`);
+        result.success = false;
+    }
+  } catch (e) {
+    result.success = false;
+    result.errors?.push(`Error: ${e}`);
+  }
+
+  return result;
+}
 
 /**
  * 翻译单个文件
@@ -55,15 +298,6 @@ export async function translateFile(
           result
         );
         break;
-      case FileType.Tmx:
-        translateTmxFile(
-          baseDir,
-          originPath,
-          targetPath,
-          entry,
-          result
-        );
-        break;
       default:
         result.errors?.push(`Unsupported file type: ${fileType}`);
         result.success = false;
@@ -79,7 +313,6 @@ export async function translateFile(
 /**
  * 翻译 i18n/default.json 文件
  * 基于旧版本增量更新
- * 注意：i18n/default.json 是扁平 key-value 结构，直接用 key 访问
  */
 export async function translateI18nFile(
   originPath: string,
@@ -95,27 +328,28 @@ export async function translateI18nFile(
     return;
   }
 
-  // 计算差异
+  // 计算差异：origin 中有但 target 中没有的 key（新增或修改的）
   const diffKeys = computeJsonDiff(originData, targetData);
 
-  // 如果有差异，复制旧文件并更新差异部分
-  let outputData = targetData ? { ...targetData } : {};
+  // 基于原始文件生成新输出（深拷贝）
+  const operator: FileOperator = getFileOperator("json");
+  let outputData = deepClone(originData);
 
-  // 收集需要翻译的 key-value 对
+  // 收集需要翻译的 key-value 对（基于 diffKeys 在 origin 中查询）
+  // diffKeys 是新 key，不存在于 target，所以不需要检查已有翻译
   const keysToTranslate: string[] = [];
   const valuesToTranslate: string[] = [];
-  const keyValueMap = new Map<string, string>();
+  const pathValueMap = new Map<string, string>();
 
   for (const key of diffKeys) {
-    // i18n/default.json 是扁平结构，直接用 key 访问
-    const value = originData[key];
-    if (typeof value === "string" && value.trim()) {
-      keysToTranslate.push(key);
-      valuesToTranslate.push(value);
-      keyValueMap.set(key, value);
-    } else if (value !== undefined) {
-      // 非字符串值直接复制
-      outputData[key] = value;
+    const queryResults = operator.query(originData, key);
+    if (queryResults.length > 0) {
+      const { path: queryPath, value } = queryResults[0];
+      if (typeof value === "string" && value.trim()) {
+        keysToTranslate.push(queryPath);
+        valuesToTranslate.push(value);
+        pathValueMap.set(queryPath, value);
+      }
     }
   }
 
@@ -124,47 +358,60 @@ export async function translateI18nFile(
     console.log(`Translating ${valuesToTranslate.length} keys via LLM...`);
     const translations = await translateBatch(valuesToTranslate, "English", "Chinese");
     for (let i = 0; i < keysToTranslate.length; i++) {
-      const key = keysToTranslate[i];
-      const translated = translations[i] || keyValueMap.get(key);
+      const queryPath = keysToTranslate[i];
+      const translated = translations[i] || pathValueMap.get(queryPath);
       if (translated) {
-        outputData[key] = translated;
+        outputData = operator.update(outputData, queryPath, translated);
         result.translatedCount++;
       }
     }
   }
 
+  // 如果目标文件存在，合并已有翻译（保留 target 中非 diffKeys 的内容）
+  if (targetData) {
+    for (const key of Object.keys(targetData)) {
+      // 跳过已处理的 diffKeys
+      if (diffKeys.has(key)) continue;
+      // 直接合并非新增的 key
+      // 对于 flat i18n 文件，key 是顶级键（如 "page.compatibility.link"）
+      // query() 返回 0 结果因为它按 "." 分割路径进行嵌套遍历
+      // 所以直接使用 key 作为路径
+      const value = (targetData as Record<string, unknown>)[key];
+      if (typeof value === "string" && value.trim()) {
+        outputData = operator.update(outputData, key, value);
+        result.skippedCount++;
+      }
+    }
+  }
+
   writeJsonFile(targetPath, outputData);
-  result.skippedCount = Object.keys(outputData).length - result.translatedCount;
 }
 
 /**
  * 翻译普通 JSON 文件
- * 基于原始文件重新生成，通过 translation.json 记录已翻译的 key
+ * 使用 fileOperator 统一接口
  */
-async function translateJsonFile(
+export async function translateJsonFile(
   baseDir: string,
   originPath: string,
   targetPath: string,
   entry: FileEntry,
   result: TranslationResult
 ): Promise<void> {
-  const originData = readJsonFile<Record<string, unknown>>(originPath);
-  const manifest = loadTranslationManifest(baseDir);
+  const originContent = readJsonFile<Record<string, unknown>>(originPath);
 
-  if (!originData) {
+  if (!originContent) {
     result.errors?.push(`Origin file not found: ${originPath}`);
     result.success = false;
     return;
   }
 
-  // 获取已翻译的 keys
-  const translatedKeys = getTranslatedKeysFromManifest(manifest, entry.file);
-
-  // 读取 zh/ 目录下已有的翻译文件（如果存在）
-  const existingTarget = readJsonFile<Record<string, unknown> | null>(targetPath);
+  // 获取已翻译的 keys（从 config 合并而来）
+  const existingKeys = entry.keys || {};
 
   // 基于原始文件生成新输出
-  const outputData = deepClone(originData);
+  const operator: FileOperator = getFileOperator("json");
+  let outputData = deepClone(originContent);
 
   if (entry.translateKeys && entry.translateKeys.length > 0) {
     // 收集需要翻译的文本
@@ -174,22 +421,20 @@ async function translateJsonFile(
 
     // 按指定 keys 翻译
     for (const keyPattern of entry.translateKeys) {
-      const values = extractValuesByPath(originData, keyPattern);
-      for (const [fullPath, value] of Object.entries(values)) {
+      const queryResults = operator.query(originContent, keyPattern);
+
+      for (const { path: queryPath, value } of queryResults) {
         if (typeof value === "string" && value.trim()) {
-          // 先尝试从已翻译文件中获取
-          if (existingTarget) {
-            const translatedValue = getValueByPath(existingTarget, fullPath);
-            if (translatedValue !== undefined) {
-              setValueByPath(outputData, fullPath, translatedValue);
-              result.translatedCount++;
-              continue;
-            }
+          // 先尝试从已有翻译中获取
+          if (existingKeys[queryPath]) {
+            outputData = operator.update(outputData, queryPath, existingKeys[queryPath]);
+            result.translatedCount++;
+            continue;
           }
           // 需要 LLM 翻译
-          pathsToTranslate.push(fullPath);
+          pathsToTranslate.push(queryPath);
           valuesToTranslate.push(value);
-          pathValueMap.set(fullPath, value);
+          pathValueMap.set(queryPath, value);
         }
       }
     }
@@ -198,10 +443,10 @@ async function translateJsonFile(
     if (valuesToTranslate.length > 0) {
       const translations = await translateBatch(valuesToTranslate, "English", "Chinese");
       for (let i = 0; i < pathsToTranslate.length; i++) {
-        const fullPath = pathsToTranslate[i];
-        const translated = translations[i] || pathValueMap.get(fullPath);
+        const queryPath = pathsToTranslate[i];
+        const translated = translations[i] || pathValueMap.get(queryPath);
         if (translated) {
-          setValueByPath(outputData, fullPath, translated);
+          outputData = operator.update(outputData, queryPath, translated);
           result.translatedCount++;
         }
       }
@@ -212,160 +457,11 @@ async function translateJsonFile(
 }
 
 /**
- * 翻译 TMX 文件
- * 使用正则直接替换 XML 中的 property 值
+ * 按路径获取值（支持 query 语法）
  */
-function translateTmxFile(
-  baseDir: string,
-  originPath: string,
-  targetPath: string,
-  entry: FileEntry,
-  result: TranslationResult
-): void {
-  const originContent = readTmxFile(originPath);
-  const existingTargetContent = readTmxFile(targetPath);
-
-  if (!originContent) {
-    result.errors?.push(`Origin file not found: ${originPath}`);
-    result.success = false;
-    return;
-  }
-
-  let outputContent = originContent;
-
-  if (entry.translateKeys && entry.translateKeys.length > 0 && existingTargetContent) {
-    // 从目标文件提取已翻译的内容
-    for (const keyPattern of entry.translateKeys) {
-      const translatedItems = extractFromTmx(existingTargetContent, keyPattern);
-
-      for (const item of translatedItems) {
-        // 在原始文件中替换对应 name 的 property 的 value
-        outputContent = replaceTmxPropertyValue(outputContent, item.name, item.value);
-        result.translatedCount++;
-      }
-    }
-  } else {
-    result.skippedCount++;
-  }
-
-  // 输出翻译后的 TMX
-  writeTmxFile(targetPath, outputContent);
-}
-
-/**
- * 根据 path pattern 提取值
- * 支持 (*), (*) 等通配符
- */
-function extractValuesByPath(
-  obj: unknown,
-  pattern: string
-): Record<string, unknown> {
-  const results: Record<string, unknown> = {};
-  const normalizedPattern = pattern.replace(/\(\*\)/g, "*");
-
-  extractRecursive(obj, normalizedPattern, results, "");
-  return results;
-}
-
-function extractRecursive(
-  obj: unknown,
-  pattern: string,
-  results: Record<string, unknown>,
-  currentPath: string
-): void {
-  if (obj === null || obj === undefined) return;
-
-  if (Array.isArray(obj)) {
-    for (let i = 0; i < obj.length; i++) {
-      const itemPath = currentPath ? `${currentPath}[${i}]` : `[${i}]`;
-      extractRecursive(obj[i], pattern, results, itemPath);
-    }
-    return;
-  }
-
-  if (typeof obj === "object") {
-    for (const [key, value] of Object.entries(obj)) {
-      const keyPath = currentPath ? `${currentPath}.${key}` : key;
-
-      // 检查是否匹配模式
-      if (pattern.includes("*")) {
-        const regex = new RegExp(
-          "^" + pattern.replace(/\*/g, "[^.]+") + "$"
-        );
-        if (regex.test(keyPath)) {
-          if (typeof value === "string") {
-            results[keyPath] = value;
-          } else if (typeof value === "object" && value !== null) {
-            results[keyPath] = value;
-          }
-        }
-      } else if (keyPath === pattern) {
-        if (typeof value === "string") {
-          results[keyPath] = value;
-        }
-      }
-
-      if (typeof value === "object" && value !== null) {
-        extractRecursive(value, pattern, results, keyPath);
-      }
-    }
-  }
-}
-
-/**
- * 按路径获取值
- */
-function getValueByPath(obj: unknown, path: string): unknown {
-  const parts = path.split(".").filter(Boolean);
-  let current = obj;
-
-  for (const part of parts) {
-    if (current === null || current === undefined) {
-      return undefined;
-    }
-
-    // 处理数组索引 [0] 或 [name] 等
-    const arrayMatch = part.match(/^(.+?)\[(\d+|\w+)\]$/);
-    if (arrayMatch) {
-      const [, key, index] = arrayMatch;
-      if (key) {
-        current = (current as Record<string, unknown>)[key];
-      }
-      if (current && typeof current === "object" && !Array.isArray(current)) {
-        current = (current as Record<string, unknown>)[index];
-      } else if (current && Array.isArray(current)) {
-        current = current[parseInt(index)];
-      } else {
-        return undefined;
-      }
-    } else if (typeof current === "object") {
-      current = (current as Record<string, unknown>)[part];
-    } else {
-      return undefined;
-    }
-  }
-
-  return current;
-}
-
-/**
- * 按路径设置值
- */
-function setValueByPath(obj: unknown, path: string, value: unknown): void {
-  const parts = path.split(".").filter(Boolean);
-  const target = obj as Record<string, unknown>;
-  let current = target;
-
-  for (let i = 0; i < parts.length - 1; i++) {
-    const part = parts[i];
-    if (current[part] === undefined) {
-      current[part] = {};
-    }
-    current = current[part] as Record<string, unknown>;
-  }
-
-  const lastPart = parts[parts.length - 1];
-  current[lastPart] = value;
+function getValueByPath(obj: unknown, pathStr: string): unknown {
+  const results = query(obj, pathStr);
+  return results.length > 0 ? results[0].value : undefined;
 }
 
 /**
