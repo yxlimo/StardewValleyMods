@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Pack translation files into zip
-# Usage: ./pack_translation.sh DeluxeGrabberFix
+# Usage: ./build_release.sh DeluxeGrabberFix
 
 set -e
 
@@ -12,8 +12,8 @@ if [ -z "$1" ]; then
 fi
 
 MOD_NAME="$1"
-ZH_SOURCE="ChineseTranslation/zh/${MOD_NAME}"
-DIST_DIR="dist"
+ZH_SOURCE="mods/zh/${MOD_NAME}"
+DIST_DIR="mods/release"
 OUTPUT_ZIP="${DIST_DIR}/${MOD_NAME}.zip"
 
 if [ ! -d "$ZH_SOURCE" ]; then
@@ -24,6 +24,6 @@ fi
 mkdir -p "$DIST_DIR"
 
 echo "Packing ${MOD_NAME}..."
-(cd "ChineseTranslation/zh" && zip -r "../../${OUTPUT_ZIP}" "$MOD_NAME" -x "*/README.md")
+(cd "mods/zh" && zip -r "../../${OUTPUT_ZIP}" "$MOD_NAME" -x "*/README.md")
 
 echo "Created: ${OUTPUT_ZIP}"

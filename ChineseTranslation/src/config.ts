@@ -3,9 +3,9 @@ import { resolve } from "node:path";
 import type { ModConfig, TranslationManifest } from "./types";
 import { FileType } from "./types";
 
-const CONFIG_DIR = resolve("config");
-const ORIGIN_DIR = resolve("origin");
-const ZH_DIR = resolve("zh");
+const CONFIG_DIR = resolve("mods", "config");
+const ORIGIN_DIR = resolve("mods", "default");
+const ZH_DIR = resolve("mods", "zh");
 
 /**
  * 加载配置文件

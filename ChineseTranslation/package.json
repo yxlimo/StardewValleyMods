@@ -5,7 +5,8 @@
   "description": "Auto translate Stardew Valley mods based on config files",
   "scripts": {
     "test": "bun test",
-    "translate": "bun run src/index.ts"
+    "translate": "bun run src/index.ts",
+    "pack": "bash build_release.sh"
   },
   "devDependencies": {
     "@types/bun": "latest",

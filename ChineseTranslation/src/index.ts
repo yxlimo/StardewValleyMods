@@ -3,20 +3,28 @@ import { loadConfig } from "./config";
 import { translateFile } from "./translator";
 import type { ModConfig, TranslationResult } from "./types";
 
-const CONFIG_DIR = resolve("config");
+const CONFIG_DIR = resolve("mods", "config");
 
 /**
  * CLI 入口
  *
  * 用法:
- *   bun run src/index.ts                    # 翻译所有配置
- *   bun run src/index.ts config/CapeStardew.json  # 翻译指定配置
+ *   bun run translate DeluxeGrabberFix              # 使用模组名翻译
+ *   bun run translate -c mods/config/xxx.json      # 指定配置文件
  */
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  const configPath = args[0]
-    ? resolve(args[0])
-    : resolve(CONFIG_DIR, "CapeStardew.json");
+  let configPath: string;
+
+  if (args[0] === "-c" && args[1]) {
+    configPath = resolve(args[1]);
+    args.splice(0, 2);
+  } else if (args[0]) {
+    configPath = resolve(CONFIG_DIR, `${args[0]}.json`);
+  } else {
+    console.error("Usage: bun run translate <mod-name> [-c <config-path>]");
+    process.exit(1);
+  }
 
   console.log(`Loading config: ${configPath}`);
 

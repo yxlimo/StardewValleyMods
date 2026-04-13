@@ -46,6 +46,8 @@ scripts/
 .playwright-cli/
 
 # ChineseTranslation project
-ChineseTranslation/origin
+ChineseTranslation/mods/default
+ChineseTranslation/mods/config
+ChineseTranslation/mods/release
 ChineseTranslation/node_modules/
 ChineseTranslation/.agents/skills/

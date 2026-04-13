@@ -2,7 +2,7 @@
 
 ## 概述
 
-本工具用于自动翻译星露谷（Stardew Valley）模组文件，基于配置文件实现增量翻译，尊重已有翻译。
+本工具用于自动翻译星露谷（Stardew Valley）模组文件，基于配置文件实现增量翻译，尊重已有翻译。集成 OpenAI/LLM API 进行机器翻译。
 
 ## 项目结构
 
@@ -14,44 +14,34 @@ ChineseTranslation/
 │   ├── fileHandler.ts       # 文件处理（JSON/TMX等）
 │   ├── config.ts            # 配置文件解析
 │   ├── diff.ts              # 增量对比逻辑
+│   ├── llm.ts               # LLM API 调用（含 mock 模式）
 │   └── types.ts             # 类型定义
 ├── tests/                   # bun:test 测试
 │   └── translator.test.ts
 ├── docs/
 │   └── design.md            # 本文档
-├── origin/                  # 原始 mod 文件
-├── zh/                      # 翻译后的文件
-├── config/                  # 配置文件
+├── mods/
+│   ├── config/              # 模组配置文件
+│   ├── default/             # 原始 mod 文件
+│   ├── zh/                  # 翻译后的文件
+│   └── release/             # 打包输出目录
+├── build_release.sh         # 打包脚本
 ├── package.json
 └── tsconfig.json
 ```
 
 ## 配置文件格式
 
-配置文件位于 `config/` 目录，每个模组一个 JSON 文件：
+配置文件位于 `mods/config/` 目录，每个模组一个 JSON 文件：
 
 ```json
 {
-  "baseDir": "Cape Stardew 1.6",
+  "baseDir": "DeluxeGrabberFix",
   "files": [
     {
-      "file": "(CP)OrbOfTheTides/i18n/default.json",
-      "target": "(CP)OrbOfTheTides/i18n/zh.json"
-    },
-    {
-      "file": "[CP]Annetta/content.json",
-      "target": "[CP]Annetta/content.json",
-      "translateKeys": ["ConfigSchema.AnnettaPortraitStyle.Description"]
-    },
-    {
-      "file": "Cape Stardew/Data/CapeMineCartData.json",
-      "target": "Cape Stardew/Data/CapeMineCartData.json",
-      "translateKeys": ["Changes.(*).Entries.(*).ChooseDestinationMessage"]
-    },
-    {
-      "file": "Cape Stardew/assets/CapeHouse2ndroom.tmx",
-      "target": "Cape Stardew/assets/CapeHouse2ndroom.tmx",
-      "translateKeys": ["Dialogue (*)"]
+      "file": "i18n/default.json",
+      "target": "i18n/zh.json",
+      "translateAll": true
     }
   ]
 }
@@ -61,38 +51,71 @@ ChineseTranslation/
 
 | 字段 | 说明 |
 |------|------|
-| `baseDir` | 模组文件夹名，指向 `origin/` 和 `zh/` 下的子目录 |
+| `baseDir` | 模组文件夹名，指向 `mods/default/` 和 `mods/zh/` 下的子目录 |
 | `files` | 需要翻译的文件列表 |
-| `file` | 原始文件路径（相对于 `origin/{baseDir}/`） |
-| `target` | 翻译后文件路径（相对于 `zh/{baseDir}/`） |
+| `file` | 原始文件路径（相对于 `mods/default/{baseDir}/`） |
+| `target` | 翻译后文件路径（相对于 `mods/zh/{baseDir}/`） |
 | `translateAll` | 是否全量翻译（默认 false） |
 | `translateKeys` | 使用 jsonpath 匹配的 key 列表 |
+
+## LLM 翻译
+
+### 环境配置
+
+在项目根目录 `.env` 文件中配置：
+
+```env
+OPENAI_URL=https://api.kimi.com/coding/v1
+OPENAI_API_KEY=your_api_key
+OPENAI_MODEL=K2.5
+```
+
+### llm.ts
+
+- `translateWithLLM(text, from, to)`: 翻译单个文本
+- `translateBatch(texts, from, to)`: 批量翻译文本
+- `setMockMode(enabled)`: 启用/禁用测试模式
+- `setMockTranslation(input, output)`: 设置固定翻译映射
+- `parseTranslationResult()`: 清理 AI 返回结果（移除 thinking 标签、编号等）
+
+### 测试模式
+
+测试时不调用真实 LLM API，使用 mock 模式返回预设翻译：
+
+```typescript
+import { setMockMode, setMockTranslation } from "./llm";
+
+setMockMode(true);
+setMockTranslation("Hello", "你好");
+```
 
 ## 文件类型处理
 
 ### 1. i18n/default.json（全量翻译）
 
-- 读取 `origin/{baseDir}/i18n/default.json`
-- 对比 `zh/{baseDir}/i18n/zh.json`（旧版本）
+- 读取 `mods/default/{baseDir}/i18n/default.json`
+- 对比 `mods/zh/{baseDir}/i18n/zh.json`（旧版本）
 - 找出新增或修改的 key
+- 调用 LLM 翻译新增 key
 - 将增量合并到目标文件
 
 ### 2. 其他 JSON 文件（按 key 翻译）
 
-- 读取 `origin/{baseDir}/{file}`（原始文件）
-- 读取 `zh/{baseDir}/translation.json` 获取已翻译的 key
+- 读取 `mods/default/{baseDir}/{file}`（原始文件）
+- 读取 `mods/zh/{baseDir}/translation.json` 获取已翻译的 key
 - 根据 `translateKeys` 使用 ts-jsonpath 匹配需要翻译的内容
-- 从 `zh/{baseDir}/{target}` 取出已翻译的值
+- 从 `mods/zh/{baseDir}/{target}` 取出已翻译的值
+- 调用 LLM 翻译未翻译的 key
 - 覆盖原始文件内容后输出到目标路径
 
 ### 3. TMX 文件（XML 格式）
 
 使用 `fast-xml-parser` 的 XPath 功能直接操作 XML：
 
-- 读取 `origin/{baseDir}/{file}`（原始 XML 内容）
+- 读取 `mods/default/{baseDir}/{file}`（原始 XML 内容）
 - 使用 XPath 查询需要翻译的节点
 - 根据 `translateKeys` 匹配需要翻译的内容
-- 从 `zh/{baseDir}/{target}` 取出已翻译的值
+- 从 `mods/zh/{baseDir}/{target}` 取出已翻译的值
 - 直接修改 XML 节点内容
 - 输出到目标路径
 - **注意**：直接操作 XML 节点，不转换成 JSON，防止二进制内容丢失
@@ -108,13 +131,6 @@ ChineseTranslation/
     {
       "file": "[CP]Annetta/content.json",
       "keys": ["ConfigSchema.AnnettaPortraitStyle.Description"]
-    },
-    {
-      "file": "Cape Stardew/Data/CapeShops.json",
-      "keys": [
-        "Changes.*.Entries.CapeBusStop.ChooseDestinationMessage",
-        "Changes.*.Entries.'dreamy.kickitspot_jellishop'.Owners.*.Dialogues.*.Dialogue"
-      ]
     }
   ]
 }
@@ -156,11 +172,19 @@ enum FileType {
 - `getTranslatedKeysFromManifest()`: 获取已翻译的 key
 - `getNewTranslationKeys()`: 获取新增的翻译 key
 
+### llm.ts
+
+- `translateWithLLM()`: 翻译单个文本
+- `translateBatch()`: 批量翻译文本
+- `setMockMode()`: 设置测试模式
+- `setMockTranslation()`: 设置固定翻译映射
+- `parseTranslationResult()`: 清理 AI 返回结果
+
 ### translator.ts
 
-- `translateFile()`: 翻译单个文件
-- `translateI18nFile()`: 翻译 i18n 文件
-- `translateJsonFile()`: 翻译普通 JSON 文件
+- `translateFile()`: 翻译单个文件（async）
+- `translateI18nFile()`: 翻译 i18n 文件（async）
+- `translateJsonFile()`: 翻译普通 JSON 文件（async）
 - `translateTmxFile()`: 翻译 TMX 文件
 
 ### index.ts
@@ -168,8 +192,8 @@ enum FileType {
 CLI 入口，支持：
 
 ```bash
-bun run src/index.ts                    # 翻译所有配置
-bun run src/index.ts config/CapeStardew.json  # 翻译指定配置
+bun run src/index.ts                           # 翻译所有配置
+bun run src/index.ts mods/config/DeluxeGrabberFix.json  # 翻译指定配置
 ```
 
 ## 技术栈
@@ -191,5 +215,13 @@ bun install
 bun test
 
 # 执行翻译
-bun run src/index.ts config/CapeStardew.json
+bun run translate mods/config/DeluxeGrabberFix.json
+
+# 打包翻译文件
+bun run pack DeluxeGrabberFix
 ```
+
+## 错误处理
+
+- LLM API 调用失败时，程序终止，不写入文件
+- 翻译结果自动清理 AI 多余输出（thinking 标签、编号等）
