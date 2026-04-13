@@ -4,7 +4,7 @@
       "LogName": "cursors",
       "Action": "Load",
       "Target": "Mods/CapeStardew/capewindows,",
-      "FromFile": "assets/capewindows.png",
+      "FromFile": "assets/capewindows.png"
     },
     {
       "Action": "EditData",
@@ -19,10 +19,10 @@
               "Dialogues": [
                 {
                   "Id": "dreamy.kickitspot_Jelli",
-                  "Dialogue": "你好，需要宝物吗？",
+                  "Dialogue": "你好，需要宝物吗？"
                 }
-              ],
-            },
+              ]
+            }
           ],
           "Items": [
             {
@@ -56,7 +56,7 @@
               "TradeItemAmount": 2,
               "AvailableStock": 5,
               "AvailableStockLimit": "Player",
-              "Condition": "PLAYER_VISITED_LOCATION Current Custom_CapeIslandEntry",
+              "Condition": "PLAYER_VISITED_LOCATION Current Custom_CapeIslandEntry"
             },
             {
               "ItemId": "dreamy.kickitspot_CapeWarpTotem",
@@ -121,7 +121,7 @@
               "TradeItemAmount": 1,
               "AvailableStock": 1,
               "AvailableStockLimit": "Player",
-              "Condition": "RANDOM 0.4 @addDailyLuck",
+              "Condition": "RANDOM 0.4 @addDailyLuck"
             },
             {
               "ItemId": "(O)681",
@@ -131,7 +131,7 @@
               "TradeItemAmount": 10,
               "AvailableStock": 1,
               "AvailableStockLimit": "Player",
-              "Condition": "RANDOM 0.1 @addDailyLuck",
+              "Condition": "RANDOM 0.1 @addDailyLuck"
             },
             {
               "ItemId": "Cape.1463533",
@@ -142,7 +142,7 @@
               "TradeItemAmount": 1,
               "AvailableStock": 1,
               "AvailableStockLimit": "Player",
-              "Condition": "PLAYER_HAS_SEEN_EVENT Any 1463510168",
+              "Condition": "PLAYER_HAS_SEEN_EVENT Any 1463510168"
             }
           ],
           "VisualTheme": [
@@ -215,7 +215,7 @@
                 "Height": 6
               }
             }
-          ],
+          ]
         }
       }
     },
@@ -223,7 +223,7 @@
       "Action": "EditData",
       "Target": "Data/Shops",
       "When": {
-        "HasSeenEvent |contains=14635124": "true",
+        "HasSeenEvent |contains=14635124": "true"
       },
       "TargetField": [
         "SeedShop",
@@ -234,15 +234,15 @@
           "Id": "Cape.StickyRiceFlour",
           "ItemId": "Cape.StickyRiceFlour",
           "Price": "200",
-          "IsRecipe": "false",
-        },
-      },
+          "IsRecipe": "false"
+        }
+      }
     },
     {
       "Action": "EditData",
       "Target": "Data/Shops",
       "When": {
-        "HasSeenEvent |contains=14635124": "true",
+        "HasSeenEvent |contains=14635124": "true"
       },
       "TargetField": [
         "SeedShop",
@@ -253,15 +253,15 @@
           "Id": "Cape.StickyRiceFlourRecipe",
           "ItemId": "Cape.StickyRiceFlour",
           "Price": "300",
-          "IsRecipe": "true",
-        },
-      },
+          "IsRecipe": "true"
+        }
+      }
     },
     {
       "Action": "EditData",
       "Target": "Data/Shops",
       "When": {
-        "HasSeenEvent |contains=14635124": "true",
+        "HasSeenEvent |contains=14635124": "true"
       },
       "TargetField": [
         "SeedShop",
@@ -272,15 +272,15 @@
           "Id": "Cape.GumiSweetRice",
           "ItemId": "Cape.GumiSweetRice",
           "Price": "150",
-          "IsRecipe": "false",
-        },
-      },
+          "IsRecipe": "false"
+        }
+      }
     },
     {
       "Action": "EditData",
       "Target": "Data/Shops",
       "When": {
-        "HasSeenEvent |contains=146356991": "true",
+        "HasSeenEvent |contains=146356991": "true"
       },
       "TargetField": [
         "SeedShop",
@@ -291,15 +291,15 @@
           "Id": "Cape.CornSilk",
           "ItemId": "Cape.CornSilk",
           "Price": "80",
-          "IsRecipe": "false",
-        },
-      },
+          "IsRecipe": "false"
+        }
+      }
     },
     {
       "Action": "EditData",
       "Target": "Data/Shops",
       "When": {
-        "HasSeenEvent |contains=146356991": "true",
+        "HasSeenEvent |contains=146356991": "true"
       },
       "TargetField": [
         "SeedShop",
@@ -310,9 +310,9 @@
           "Id": "Cape.CuachalalateBark",
           "ItemId": "Cape.CuachalalateBark",
           "Price": "100",
-          "IsRecipe": "false",
-        },
-      },
+          "IsRecipe": "false"
+        }
+      }
     },
     {
       "LogName": "desertshopShavegrass",
@@ -330,9 +330,9 @@
           "AvailableStock": 8,
           "AvailableStockLimit": "Global",
           "Price": 150,
-          "MinStack": 4,
-        },
-      },
+          "MinStack": 4
+        }
+      }
     },
     {
       "LogName": "DesertShopUvaUrsi",
@@ -350,9 +350,9 @@
           "AvailableStock": 4,
           "AvailableStockLimit": "Global",
           "Price": 140,
-          "MinStack": 2,
-        },
-      },
+          "MinStack": 2
+        }
+      }
     },
     {
       "Action": "EditData",
@@ -398,7 +398,7 @@
           "TradeItemAmount": 1,
           "AvailableStock": 1,
           "AvailableStockLimit": "Player",
-          "Condition": "PLAYER_HAS_SEEN_EVENT Any 14635fixv3",
+          "Condition": "PLAYER_HAS_SEEN_EVENT Any 14635fixv3"
         },
         "dreamy.kickitspot_SilverPetal": {
           "Id": "dreamy.kickitspot_SilverPetal",
@@ -408,7 +408,7 @@
           "TradeItemAmount": 1,
           "AvailableStock": 1,
           "AvailableStockLimit": "Player",
-          "Condition": "PLAYER_VISITED_LOCATION Current Custom_CapeMineForest, PLAYER_HAS_SEEN_EVENT Current {{ModId}}_RingEv1",
+          "Condition": "PLAYER_VISITED_LOCATION Current Custom_CapeMineForest, PLAYER_HAS_SEEN_EVENT Current {{ModId}}_RingEv1"
         },
         "dreamy.kickitspot_SkyOak": {
           "Id": "dreamy.kickitspot_SkyOak",
@@ -418,12 +418,12 @@
           "TradeItemAmount": 1,
           "AvailableStock": 1,
           "AvailableStockLimit": "Player",
-          "Condition": "PLAYER_VISITED_LOCATION Current Custom_UnlockSecretBase",
-        },
+          "Condition": "PLAYER_VISITED_LOCATION Current Custom_UnlockSecretBase"
+        }
       },
       "When": {
-        "JelliLunar": true,
-      },
+        "JelliLunar": true
+      }
     },
     {
       "Action": "EditData",
@@ -439,12 +439,12 @@
           "Price": 0,
           "AvailableStock": 5,
           "AvailableStockLimit": "Player",
-          "Condition": "PLAYER_HAS_MAIL Current prettyStone1 Any",
-        },
+          "Condition": "PLAYER_HAS_MAIL Current prettyStone1 Any"
+        }
       },
       "When": {
-        "HasFlag": "prettyStone1",
-      },
+        "HasFlag": "prettyStone1"
+      }
     },
     {
       "Action": "EditData",
@@ -466,8 +466,8 @@
         }
       },
       "When": {
-        "HasVisitedLocation": "Custom_CapeKeyMaze2",
-      },
+        "HasVisitedLocation": "Custom_CapeKeyMaze2"
+      }
     },
     {
       "Action": "EditData",
@@ -489,8 +489,8 @@
         }
       },
       "When": {
-        "HasVisitedLocation": "Custom_CapeKeyMaze",
-      },
+        "HasVisitedLocation": "Custom_CapeKeyMaze"
+      }
     },
     {
       "Action": "EditData",
@@ -503,10 +503,10 @@
               "Dialogues": [
                 {
                   "Id": "dreamy.kickitspot_Jelli",
-                  "Dialogue": "箱子是打开的。",
+                  "Dialogue": "箱子是打开的。"
                 }
-              ],
-            },
+              ]
+            }
           ],
           "Items": [
             {
@@ -550,7 +550,7 @@
               "TradeItemAmount": 2,
               "AvailableStock": 5,
               "AvailableStockLimit": "Player",
-              "Condition": "PLAYER_VISITED_LOCATION Current Custom_CapeIslandEntry",
+              "Condition": "PLAYER_VISITED_LOCATION Current Custom_CapeIslandEntry"
             },
             {
               "ItemId": "dreamy.kickitspot_CapeWarpTotem",
@@ -615,7 +615,7 @@
               "TradeItemAmount": 1,
               "AvailableStock": 1,
               "AvailableStockLimit": "Player",
-              "Condition": "RANDOM 0.4 @addDailyLuck",
+              "Condition": "RANDOM 0.4 @addDailyLuck"
             },
             {
               "ItemId": "(O)681",
@@ -625,7 +625,7 @@
               "TradeItemAmount": 10,
               "AvailableStock": 1,
               "AvailableStockLimit": "Player",
-              "Condition": "RANDOM 0.1 @addDailyLuck",
+              "Condition": "RANDOM 0.1 @addDailyLuck"
             },
             {
               "ItemId": "Cape.1463533",
@@ -636,7 +636,7 @@
               "TradeItemAmount": 1,
               "AvailableStock": 1,
               "AvailableStockLimit": "Player",
-              "Condition": "PLAYER_HAS_SEEN_EVENT Any 1463510168",
+              "Condition": "PLAYER_HAS_SEEN_EVENT Any 1463510168"
             }
           ],
           "VisualTheme": [
@@ -709,9 +709,9 @@
                 "Height": 6
               }
             }
-          ],
+          ]
         }
       }
-    },
+    }
   ]
 }

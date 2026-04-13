@@ -1,6 +1,5 @@
 {
   "Annetta.dislplayname.0": "安妮塔",
-  //annetta///event/extra//
   "Annetta.quickquestion.001": "你想向安妮塔透露关于杰利的情况吗？ ",
   "Annetta.quickquestion.yes": "是",
   "Annetta.quickquestion.no": "否",
@@ -8,14 +7,12 @@
   "Annetta.quickquestion.003": "一个海之精灵？这太不可思议了！星露海角真的是个神奇的地方。能知道有这样的秘密存在，我感到很荣幸。 ",
   "Annetta.quickquestion.004": "你决定把杰利当作一个秘密保护起来。 ",
   "Annetta.quickquestion.005": "我肯定是在胡思乱想。但有时，感觉这个地方充满了古老的魔力。我想知道它还藏着什么别的秘密。 ",
-  //eventspringorderannetta//
   "annetta.springorderevent": "嘿那里！#$b# 哦，请原谅，我正在全神贯注于这本关于星之果神秘特性的古书。 #$b# 你知道有些人相信它可以实现愿望吗？ 真是相当迷人！ 但我离题了。 我一直在考虑我的下一个艺术冒险，并认为也许你可以帮助我。 #$b# 我正在寻找一些特别的东西来激发我的下一个创作...比如说农场主，你为什么不帮助一位女士呢。#$b# 我当然保证会奖励你。",
   "annetta.springorderquestion": "嗯……你见过黄色或金色的稀有物品吗？",
   "Anet.SpringOrder.001": "当然，我会留意类似的事情。",
   "Anet.SpringOrder.002": "抱歉，我现在无法提供帮助。",
   "SpringOrder.Deny": "我明白。 下一次吧！",
   "SpringOrder.Accept": "很好地！ 请关注我，谢谢@。",
-  //Festival//
   "f.a.001": "假期中最美好的部分就是食物了。#$b# 奉献精神也对我们所有人都有好处。",
   "f.a.002": "诡异的庆祝活动才刚刚开始。#$e# 骷髅演员是那么的逼真。 #$b# 我试图靠近一点，但其中一只就对我咆哮。",
   "f.a.003": "嗨 @，我可以在这里看到鱼在冰下游动哎。",
@@ -24,13 +21,11 @@
   "f.a.006": "我能从这里的扬声器中感受到音乐的节拍",
   "f.a.007": "我喜欢这些节日，尤其是涉及食物的时候！",
   "f.a.008": "我认为寻蛋活动非常精彩！ 我想知道谁会拔得头筹。",
-  //GiftTastes///
   "gift.Annetta.001": "有时候最好的礼物就是最让我惊喜的礼物，比如这个。 你超越了自己!",
   "gift.Annetta.002": "哦！ 你怎么知道我想要的其中之一的！",
   "gift.Annetta.003": "谢谢你... 这将制造出很好的弹药。",
   "gift.Annetta.004": "我可以告诉你对此投入了很多心思...",
   "gift.Annetta.005": "谢谢你这么为我着想!",
-  //AnnettaEvents//
   "annetta.cs.e.001": "...嘿 @.",
   "annetta.cs.e.002": "看起来你像是在沉思...",
   "annetta.cs.e.003": "怎么了, @?",
@@ -42,20 +37,17 @@
   "annetta.cs.e.009": "我知道我会帮你启航的!$1",
   "annetta.cs.e.010": "好了，我们把船开进水里吧。",
   "annetta.cs.e.011": "干得漂亮, @!",
-  ///questevents//
   "annetta.quest.e.001": "噢嘿!我正找你呢。$h #$b# 现在是黑莓的季节，我想从你的农场订一些。",
   "annetta.quest.e.004": "你能答应在这个季节为我提供新鲜的黑莓吗，@?",
   "Anet.Question.001": "是的，安妮塔！我会确保你得到那些新鲜的黑莓",
   "Anet.Question.002": "不，抱歉安妮塔。我现在不能承诺这一点。",
   "anet.fq.001": "我会热切地等待那些美味的黑莓。",
   "anet.fq.002": "哦，我明白了。如果你改变主意，请告诉我。新鲜的黑莓会是一种享受！",
-  //lostsketchbook//
   "annetta.quest.s.001": "你好， @",
   "annetta.quest.s.002": "我希望你能帮帮我。",
   "annetta.quest.s.003": "我好像在森林里丢了我的速写本。",
   "annetta.quest.s.004": "如果你碰巧找到了，就把它带到我家来吧。",
   "annetta.quest.s.005": "谢谢你.",
-  ///starfruit//
   "annetta.quest.star.001": "哦，你好@.",
   "annetta.quest.star.002": "很高兴再次见到你。",
   "annetta.quest.star.003": "如果你不介意的话，我想知道你的农场里有没有杨桃?",
@@ -64,22 +56,18 @@
   "annetta.cabinreaction.001": "这个舒适的小木屋是从哪里来的?",
   "annetta.cabinreaction.002": "它建得真漂亮!$h #$b# $7@可能有事情要做吗?",
   "annetta.cabinreaction.003": "太鼓舞人心了。",
-  //EntryDialogue//
   "Entry.Dialogue.CapeStardew_Wind": "看起来有点多云。/ 外面的空气很新鲜。/ 今天风真大。",
   "Entry.Dialogue.CapeStardew_Rain": "哇哦，这里下大雨了。/ 我真的想出去吗?/ 下雨有时很好玩。",
   "Entry.Dialogue.CapeStardew_Snow": "这是冬天的仙境!/ 太冷了。/ 有家的感觉。/ 今天很冷。",
   "Entry.Dialogue.AnnettaHouse_Snow": "最后要回家了/ 太冷了。/ 现在是热巧克力时间。/ 温暖的房子，耶!",
   "Entry.Dialogue.Saloon_AnnettaSummer": "下午好，格斯。/ 请来一杯热咖啡!",
-  //AnnettaConditionalDialogue//
   "Location.v1.Annetta10_Summer": "一幅画总是承载着艺术家的一小部分灵魂。$6",
   "Location.v2.Annetta10_Summer": "我最喜欢的地方是我的书房。我喜欢它，因为在这里我可以通过我的这些书了解更多的世界。我打开窗户，让微风吹进来，然后我听到的是森林里平静的声音。",
-  //missingrecipes//
   "annetta.missing.001": "早上好 @",
   "annetta.missing.002": "你收到我的邮件了吗?",
   "annetta.missing.003": "我试着给你发了一个食谱。",
   "annetta.missing.004": "没什么大不了的。这是我想发给你的食谱。",
   "annetta.missing.005": "这是我的最爱之一。让我知道你的想法。再见，@。",
-  ///event1463510022-AnnettaVisit//
   "annetta.cabin.event.001": "...您好，有人在吗？",
   "annetta.cabin.event.1question": "这个时间会是谁？",
   "annetta.cabin.event.answer1": "去开门。",
@@ -154,7 +142,6 @@
   "annetta.cabin.event.const4": "观星是一种很好的放松方式。",
   "annetta.cabin.event.cfbye1": "我真的很高兴我们决定今晚来欣赏这火焰和星星的景色，@。",
   "annetta.cabin.event.fav": "你最喜欢什么？",
-  ///greenrain//
   "Annetta.Main.Dialogue.GR": "哦，你好！ 你看到外面下雨了吗？ 这是... #$b# 绿色的。 到底是怎么回事？",
   "Annetta.Schedule.GreenRain.001": "嘿，你看到外面下雨了吗？ 它是绿色的。 很奇特，不是吗？",
   "Annetta.Schedule.GreenRain.002": "我以前从未见过这样的事情。 我上网查一下，看看有没有其他人也遇到过这种情况。",
@@ -166,8 +153,6 @@
   "Annetta.Schedule.GreenRain.008": "啊，又下起了绿色的雨。 似乎这已经成为一种常态。 好吧，至少它给了我一个留在室内并高效地演奏音乐的借口。",
   "Annetta.Schedule.GreenRain.009": "谁知道这种奇怪的天气会激发出什么奇迹呢？ 也许外面长满青苔的环境中会出现一种新的旋律。",
   "Annetta.Schedule.GreenRain.010": "我无法摆脱对绿色雨的这种怪异感觉。 就像大自然试图告诉我们一些我们不应该理解的事情。",
-  ///greenrainend//
-  ///scheduleDialogue///
   "Annetta.Schedule.Dialogue.000": "我搬到这里是为了创作和制作一些新音乐。#$b#我总是犹豫要不要搬到一个新地方，因为我爱我的家乡。 #$b#我相信改变一个人的环境以带来新的想法是有帮助的。 #$e#这就是我的理论。",
   "Annetta.Schedule.Dialogue.001": "住在海边使我想起了我的家乡。 #$e#我在港口有个家。$9",
   "Annetta.Schedule.Dialogue.002": "我的家乡没有多少森林。 #$b# 我很喜欢我的新环境，尽管我很想家。",
@@ -270,7 +255,6 @@
   "Annetta.Schedule.Dialogue.099": "我认为我不会对这种观点感到厌倦。",
   "Annetta.Schedule.Dialogue.100": "你知道吗，海洋也有季节之分。 在寒冷的冬季，它可能会变得很强烈。$9",
   "Annetta.Schedule.Dialogue.101": "季节变化，随之而来的是新的和不可预测的生活。$9",
-  ///Dialogue//
   "Annetta.Main.Dialogue.001": "你好!$9 #$b# 你也是新来的吗?$4#$b#你叫什么名字? #$b# 我听说你的名字是@。见到你很高兴 #$b# 我叫安妮塔。我住在南边的星露角。我也是新来的。 #$b# 我从一个遥远的地方搬到这里，那里有火山、熔岩场和迷人的黑色沙滩。那里的天气相当阴沉，偶尔会有暴风雪。 #$e# 我期待着与你相遇!$1",
   "Annetta.Main.Dialogue.002": "见到你总是很高兴。好好享受你的时光!",
   "Annetta.Main.Dialogue.003": "度假村总是在这里可以带你逃离现实。",
@@ -409,7 +393,6 @@
   "Annetta.special.event.001": "真奇怪。我突然感觉到的存在是什么?$7",
   "Annetta.special.event.002": "哦，大家好!是你啊!我在沙滩音乐会的时候被发现了。希望你不介意我的即兴表演。$4",
   "Annetta.special.event.003": "现在看来，这是出乎意料的。这里肯定有什么东西在搅动。$8",
-  ///order///
   "annetta.order.s.001": "我想亲自感谢你最近的帮助。",
   "annetta.order.s.002": "你的努力没有被忽视。我有特别的东西给你。",
   "annetta.order.s.003": "拿着这个食谱...",
@@ -425,11 +408,9 @@
   "Annetta_quest.reaction": "哦！我最喜欢的水果之一，谢谢你把它们送来。它们看起来很新鲜。",
   "Annetta_quest2.reaction": "哦，谢天谢地！我还以为我所有的草图都永远消失了。看起来所有的页面仍然完好无损。谢谢！ ",
   "Annetta_quest3.reaction": "哇哦！它们看起来就像星星。$h #$b# 现在来尝尝味道。#$b# .... #$b#嗯。哦，哇！有点甜，还有点酸。有点像苹果！$h",
-  //conversationtopics//
   "Capelakewalk.convotopic": "昨晚去湖边散步，感觉好像月亮自己决定与我们共舞，如此明亮地闪耀着，你不觉得吗 ？",
   "Annetta.Jelli.Encounter.yes": "你知道吗，自从你跟我讲了那个海之精灵之后，我就一直在想这件事。想到海洋里有那么多我们不了解的东西，真是太神奇了。 ",
   "Annetta.Jelli.Encounter.no": "我一直在想水里的那片水花。这一切都太神秘了。那会是什么呢？海洋蕴藏着如此多的秘密。 ",
-  ///AnnettaJelliMystery//
   "Annetta.new.event.001": "自从你跟我讲了海之精灵的事，我就一直很好奇。 ",
   "Annetta.new.event.002": "我不停地在想着海洋的奥秘。 ",
   "Annetta.new.event.003": "你与海之精灵的联系让我领略到了海洋的美丽与宁静。我搬到星露谷是为了有机会去探索和发现新的奇迹。现在，我梦想着遇见精灵，拥抱海洋，并揭开这个世界隐藏的奇迹。",
@@ -437,5 +418,5 @@
   "Annetta.bday.dialogue.001": "森林是进行反思的绝佳场所。",
   "Annetta.bday.dialogue.002": "今天这个小镇热闹非凡，但我只想享受这些小事。生日总能把人们最好的一面展现出来。",
   "Annetta.bday.dialogue.003": "今晚的星星看起来如此明亮清晰。",
-  "Annetta.bday.dialogue.004": "罗宾，谢谢你让我在这里闲逛。和好朋友在星空下庆祝总能让人感到温馨。",
+  "Annetta.bday.dialogue.004": "罗宾，谢谢你让我在这里闲逛。和好朋友在星空下庆祝总能让人感到温馨。"
 }
