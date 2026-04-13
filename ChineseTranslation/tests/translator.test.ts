@@ -550,6 +550,40 @@ describe("translator with LLM", () => {
     expect(translatedData!["key2"]).toBe("世界");
   });
 
+  test("translateI18nFile translates keys with dots in top-level key", async () => {
+    // 当 origin 有带点的顶级 key（如 "Guild.CapeDinos.Name"），zh 中没有时能正确翻译
+    const originData = {
+      "Guild.CapeDinos.Name": "Dino Encounter",
+      "Guild.CapeDinos.Dialogue": "A dinosaur dialogue",
+    };
+
+    writeJsonFile(TEST_ORIGIN, originData);
+
+    const result: TranslationResult = {
+      success: true,
+      file: "test",
+      translatedCount: 0,
+      skippedCount: 0,
+      errors: [],
+    };
+
+    await translateI18nFile(TEST_ORIGIN, TEST_ZH, result);
+
+    expect(result.success).toBe(true);
+    // 两个带点的 key 都应该被翻译
+    expect(result.translatedCount).toBe(2);
+    expect(result.skippedCount).toBe(0);
+
+    const translatedData = readJsonFile<Record<string, string>>(TEST_ZH);
+    expect(translatedData).not.toBeNull();
+    // 应该保留原有的 key 格式（带点）
+    expect(translatedData!["Guild.CapeDinos.Name"]).toBeDefined();
+    expect(translatedData!["Guild.CapeDinos.Dialogue"]).toBeDefined();
+    // 值应该是中文翻译，不是英文
+    expect(translatedData!["Guild.CapeDinos.Name"]).not.toBe("Dino Encounter");
+    expect(translatedData!["Guild.CapeDinos.Dialogue"]).not.toBe("A dinosaur dialogue");
+  });
+
   test("translateI18nFile handles non-string values", async () => {
     const originData = {
       "greeting": "Hello",

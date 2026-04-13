@@ -18,6 +18,27 @@ import { FileType } from "./types";
 import type { FileEntry, TranslationResult } from "./types";
 
 /**
+ * Verbose logging flag
+ */
+let verbose = false;
+
+/**
+ * Set verbose mode
+ */
+export function setVerbose(enabled: boolean): void {
+  verbose = enabled;
+}
+
+/**
+ * Verbose log helper
+ */
+function log(...args: unknown[]): void {
+  if (verbose) {
+    console.log("[verbose]", ...args);
+  }
+}
+
+/**
  * 翻译条目（用于批量 LLM 调用）
  */
 interface TranslationItem {
@@ -87,8 +108,12 @@ export async function translateAllToStaging(
           targetData as Record<string, unknown> | null
         );
 
+        log(`[${entry.file}] diffKeys (${diffKeys.size}):`, [...diffKeys]);
+
         for (const key of diffKeys) {
-          const queryResults = operator.query(originData, key);
+          // key 可能包含点（如 "Guild.CapeDinos.Name"），用反引号强制作为单 key 查询
+          const queryKey = key.includes(".") ? `\`${key}\`` : key;
+          const queryResults = operator.query(originData, queryKey);
           if (queryResults.length > 0) {
             const { path: queryPath, value } = queryResults[0];
             if (typeof value === "string" && value.trim()) {
@@ -101,13 +126,16 @@ export async function translateAllToStaging(
           }
         }
 
-        // 合并已有翻译（非 diffKeys 的部分）
+        log(`[${entry.file}] targetData keys:`, Object.keys(targetData || {}));
+        log(`[${entry.file}] itemsToTranslate from diff:`, itemsToTranslate.slice(-diffKeys.size).map(i => ({ path: i.path, value: i.value.slice(0, 50) })));
+
+        // 合并已有翻译（key 存在于 zh 中就保留，不管值是否和 origin 相同）
         if (targetData) {
           const targetObj = targetData as Record<string, unknown>;
           for (const key of Object.keys(targetObj)) {
             if (diffKeys.has(key)) continue;
-            // 复制已有翻译（中文值）到 outputData
             const value = targetObj[key];
+            // 只要 key 存在于 zh 中，就使用 zh 中的值
             if (typeof value === "string" && value.trim()) {
               outputData = operator.update(outputData, key, value);
               skippedCount++;
@@ -156,6 +184,9 @@ export async function translateAllToStaging(
 
   // Step 2: 调用 LLM 批量翻译
   if (itemsToTranslate.length > 0) {
+    log(`Total items to translate: ${itemsToTranslate.length}`);
+    log("Items details:", itemsToTranslate.map(i => ({ file: files[i.fileIndex]?.file, path: i.path, value: i.value.slice(0, 50) })));
+
     console.log(`Translating ${itemsToTranslate.length} items via LLM...`);
 
     // 收集所有需要翻译的文本
@@ -169,6 +200,8 @@ export async function translateAllToStaging(
 
     // 一次性调用 LLM
     const translations = await translateBatch(allTexts, "English", "Chinese");
+
+    log("LLM translations:", translations.map((t, i) => ({ original: allTexts[i].slice(0, 30), translated: t.slice(0, 30) })));
 
     // 应用翻译结果
     for (let i = 0; i < allTexts.length; i++) {
@@ -342,7 +375,9 @@ export async function translateI18nFile(
   const pathValueMap = new Map<string, string>();
 
   for (const key of diffKeys) {
-    const queryResults = operator.query(originData, key);
+    // key 可能包含点（如 "Guild.CapeDinos.Name"），用反引号强制作为单 key 查询
+    const queryKey = key.includes(".") ? `\`${key}\`` : key;
+    const queryResults = operator.query(originData, queryKey);
     if (queryResults.length > 0) {
       const { path: queryPath, value } = queryResults[0];
       if (typeof value === "string" && value.trim()) {

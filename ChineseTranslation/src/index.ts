@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, writeFileSync, readdirSync, statSync, rmSync, re
 import { Command } from "commander";
 import archiver from "archiver";
 import { loadConfig } from "./config";
-import { translateAllToStaging } from "./translator";
+import { translateAllToStaging, setVerbose } from "./translator";
 import { getFileOperator } from "./fileOperator";
 import { readJsonFile } from "./fileHandler";
 import type { TranslationResult } from "./types";
@@ -19,7 +19,12 @@ const STAGING_DIR = resolve(TMP_DIR, "staging");
  * All files are translated to staging first, then moved to zh/ on success.
  * If any file fails, no target files are modified.
  */
-async function translate(modName: string | undefined, options: { config?: string }): Promise<void> {
+async function translate(modName: string | undefined, options: { config?: string; verbose?: boolean }): Promise<void> {
+  // Set verbose mode
+  if (options.verbose) {
+    setVerbose(true);
+  }
+
   let configPath: string;
 
   if (options.config) {
@@ -229,6 +234,7 @@ async function main(): Promise<void> {
     .command("translate [mod-name]")
     .description("Translate mod files")
     .option("-c, --config <path>", "Specify config file path")
+    .option("-v, --verbose", "Enable verbose logging")
     .action(translate);
 
   program
