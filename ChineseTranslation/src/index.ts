@@ -1,5 +1,5 @@
 import { resolve, join } from "node:path";
-import { existsSync, mkdirSync, writeFileSync, readdirSync, statSync, rmSync, renameSync } from "node:fs";
+import { existsSync, mkdirSync, createWriteStream, readdirSync, statSync, rmSync, renameSync } from "node:fs";
 import { Command } from "commander";
 import archiver from "archiver";
 import { loadConfig } from "./config";
@@ -177,7 +177,14 @@ async function pack(modName: string | undefined): Promise<void> {
     return;
   }
 
-  const zhSource = resolve("mods", "zh", modName);
+  const configPath = resolve(CONFIG_DIR, `${modName}.json`);
+  if (!existsSync(configPath)) {
+    console.error(`Error: Config file '${configPath}' not found`);
+    return;
+  }
+
+  const config = loadConfig(configPath);
+  const zhSource = resolve("mods", "zh", config.baseDir);
   const distDir = resolve("mods", "release");
   const outputZip = resolve(distDir, `${modName}.zip`);
 
@@ -191,7 +198,7 @@ async function pack(modName: string | undefined): Promise<void> {
   console.log(`Packing ${modName}...`);
 
   // 使用 archiver 创建 zip
-  const output = writeFileSync(outputZip, "w");
+  const output = createWriteStream(outputZip);
   const archive = archiver("zip", { zlib: { level: 9 } });
 
   archive.pipe(output);
