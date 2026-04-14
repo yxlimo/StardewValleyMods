@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>SmartFilteredHopper</AssemblyName>
     <RootNamespace>SmartFilteredHopper</RootNamespace>
-    <Version>0.2.2</Version>
+    <Version>0.3.0</Version>
     <LangVersion>latest</LangVersion>
     <TargetFramework>net6.0</TargetFramework>
     <EnableHarmony>true</EnableHarmony>
@@ -15,5 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />
+    <!-- 禁用自动资源匹配 -->
+    <EmbeddedResource Remove="**/*.resx" />
   </ItemGroup>
 </Project>

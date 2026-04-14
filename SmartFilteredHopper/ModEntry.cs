@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using HarmonyLib;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -13,6 +14,9 @@ namespace SmartFilteredHopper {
     public int AutomateCountdown;
 
     private Dictionary<GameLocation, LocationManager.Manager> managers;
+    private Harmony harmony;
+
+    private const string CapacityModDataKey = "SmartFilteredHopper/Capacity";
 
     public override void Entry(IModHelper helper) {
       helper.Events.GameLoop.UpdateTicked += this.UpdateTicked;
@@ -20,9 +24,13 @@ namespace SmartFilteredHopper {
       helper.Events.GameLoop.DayStarted += this.DayStarted;
       helper.Events.GameLoop.GameLaunched += this.GameLaunched;
       helper.Events.World.ObjectListChanged += this.ObjectListChanged;
+      helper.Events.World.TerrainFeatureListChanged += this.TerrainFeatureListChanged;
 
       this.ctx = new Context(helper.ReadConfig<ModConfig>(), this.Monitor);
       this.managers = new Dictionary<GameLocation, LocationManager.Manager>();
+
+      this.harmony = new Harmony(this.ModManifest.UniqueID);
+      this.harmony.PatchAll();
     }
 
     private void GameLaunched(object sender, GameLaunchedEventArgs e) {
@@ -42,6 +50,7 @@ namespace SmartFilteredHopper {
 
     private void SaveLoaded(object sender, SaveLoadedEventArgs e) {
       this.ctx.Info("SaveLoaded, try regenerating LocationManagers");
+      this.stampHopperCapacity();
       this.rebuildAllLocationManagers();
     }
 
@@ -65,6 +74,30 @@ namespace SmartFilteredHopper {
         } else if (pair.Value is Chest) {
           this.handleChestChanged(e.Location);
         }
+      }
+    }
+
+    private void TerrainFeatureListChanged(object sender, TerrainFeatureListChangedEventArgs e) {
+      if (!this.ctx.Config.FlooringAsInput || !this.ctx.AutomateEnabled()) {
+        return;
+      }
+      bool hasFlooringChange = false;
+      foreach (var pair in e.Removed) {
+        if (pair.Value is StardewValley.TerrainFeatures.Flooring) {
+          hasFlooringChange = true;
+          break;
+        }
+      }
+      if (!hasFlooringChange) {
+        foreach (var pair in e.Added) {
+          if (pair.Value is StardewValley.TerrainFeatures.Flooring) {
+            hasFlooringChange = true;
+            break;
+          }
+        }
+      }
+      if (hasFlooringChange) {
+        this.buildLocationManager(e.Location);
       }
     }
 
@@ -107,8 +140,9 @@ namespace SmartFilteredHopper {
 
     private void onConfigSave() {
       this.Helper.WriteConfig(this.ctx.Config);
-      
+
       this.ctx.Info("Option saved, rebuilding all managers");
+      this.stampHopperCapacity();
       foreach (var manager in this.managers.Values) {
         manager.RebuildIOGroups();
       }
@@ -132,6 +166,34 @@ namespace SmartFilteredHopper {
         this.buildLocationManager(location);
         return true;
       });
+    }
+
+    /// <summary>
+    /// Stamp all hoppers with the configured capacity in their modData.
+    /// </summary>
+    private void stampHopperCapacity() {
+      int capacity = this.ctx.Config.HopperCapacity;
+      Utility.ForEachLocation(location => {
+        foreach (var pair in location.objects.Pairs) {
+          if (Utill.TryExtractHopper(pair.Value, out var hopper)) {
+            hopper.modData[CapacityModDataKey] = capacity.ToString();
+          }
+        }
+        return true;
+      });
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatch(typeof(Chest), nameof(Chest.GetActualCapacity))]
+    private static class ChestGetActualCapacityPatch {
+      [HarmonyPostfix]
+      private static void GetActualCapacity_Postfix(Chest __instance, ref int __result) {
+        if (__instance.modData.TryGetValue(CapacityModDataKey, out string val)
+            && int.TryParse(val, out int cap)
+            && cap > 0) {
+          __result = cap;
+        }
+      }
     }
 
   }

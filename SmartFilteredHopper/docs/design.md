@@ -1,4 +1,4 @@
-# 代码组织设计
+# SmartFilteredHopper 技术文档
 
 ## 架构概览
 
@@ -7,128 +7,155 @@ ModEntry
   └── Dictionary<GameLocation, LocationManager>
         └── LocationManager
               └── List<HopperIOGroup>
-                    ├── Hopper (Chest)
+                    ├── Hopper (Chest, SpecialChestTypes.AutoLoader)
                     ├── IInputGroup (ChestWrap / AutomateChestGroup)
                     └── Output Chest
 ```
 
-## 核心类
-
-### LocationManager
-管理单个 GameLocation 下的所有 Hopper IO 组。
-- `IOGroups`: 该 location 下所有 hopper 的输入输出组
-- `Add(Chest hopper)`: 添加 hopper 并自动查找其上下的 chest
-- `RemoveGroupByHopper(Chest hopper)`: 根据 hopper 移除对应的 IOGroup
-- `AttemptTransfer()`: 遍历所有 IOGroup 执行物品转移
+## 核心概念
 
 ### HopperIOGroup
-管理单个 hopper 的输入输出关系。
-- `Hopper`: 实际的 hopper 对象
-- `InputGroup`: 输入组接口，支持单个 chest 或 Automate 连接的一组 chest
-- `Output`: 输出 chest
+
+管理单个 Hopper 的输入输出关系：
+- `Hopper`: 实际的 hopper 对象（Chest with SpecialChestTypes.AutoLoader）
+- `InputGroup`: 输入源接口，支持单个 Chest 或通过 Automate flood-fill 发现的 Chest 组
+- `Output`: 输出 Chest（hopper 下方紧邻的 Chest）
 
 ### IInputGroup 接口
-抽象输入组，支持两种实现：
-- **ChestWrap**: 包装单个 chest
-- **AutomateChestGroup**: Automate 连接的一组 chest（flood fill 算法）
 
-接口定义：
 ```csharp
 internal interface IInputGroup {
-    Chest StartChest { get; }
+    /// 起点 tile 坐标
+    Vector2 StartTile { get; }
     bool Contains(Chest chest);
     void RemoveItem(Item item, int count);
     List<Item> GetItems();
 }
 ```
 
-## 事件处理流程
+两种实现：
+- **ChestWrap**: 包装单个 Chest，`StartTile` 即该 Chest 的 TileLocation
+- **AutomateChestGroup**: 从种子位置开始 BFS flood-fill，发现所有连接的 Chest 和 Machine
 
-### ObjectListChanged 处理原则
-1. **类型检查在 ObjectListChanged 完成**：遍历 `e.Removed` / `e.Added`，根据对象类型分发
-2. **Handler 接收强类型参数**：例如 `HandleHopperAdded(Chest hopper)` 而非 `HandleHopperAdded(Object obj)`
-3. **非目标类型直接跳过**：不在 handler 中做类型检查
+### ConnectorType 枚举
 
-### 分发逻辑
+表示输入 tile 的类型（`LocationManager/Manager.cs`）：
+
 ```csharp
-private void ObjectListChanged(object sender, ObjectListChangedEventArgs e) {
-    foreach (var pair in e.Removed) {
-        if (Utill.TryExtractHopper(pair.Value, out var hopper)) {
-            this.HandleHopperRemoved(hopper, e.Location);
-        } else if (pair.Value is Chest) {
-            this.HandleChestChanged(e.Location);
-        }
-    }
-    // similar for e.Added
+internal enum ConnectorType {
+    None,     // 不可连接
+    Chest,    // Chest tile
+    Machine,  // Automate 认识的机器 tile
+    Flooring  // 地板 path（用户启用时）
 }
 ```
 
-### Handler 职责
-- **HandleHopperRemoved**: 从 LocationManager 中移除对应 IOGroup，清理 modData
-- **HandleHopperAdded**: 获取或创建 LocationManager，调用 Add(hopper)
-- **HandleChestChanged**: 重建该 location 下的所有 Pipelines（因为 Automate Group 可能包含多个 chest）
+## 配置项
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `LogLevel` | int | 0 | 日志级别 |
+| `HopperCapacity` | int | 36 | Hopper 容量（仅支持 12 的倍数） |
+| `CompareQuality` | bool | false | 过滤器同时检查物品品质 |
+| `CompareArtifactSource` | bool | true | 工匠物品检查来源（如果酒风味） |
+| `TransferInterval` | int | 360 | 转移间隔（帧数） |
+| `GrabAutomateChestGroup` | bool | false | 连接 Automate 箱子组 |
+| `FlooringAsInput` | bool | false | 允许地板作为 Hopper 输入（仅在 GrabAutomateChestGroup 启用时生效） |
+
+## findHopperConnector
+
+查找 hopper 上下方的连接件：
+
+```csharp
+private (Vector2? inputPos, Chest output) findHopperConnector(Chest hopper)
+```
+
+- **output**: hopper 紧下方（`TileLocation + (0, 1)`）的 Chest
+- **inputPos**:
+  - 若上方是 Chest → 返回该 Chest tile 坐标
+  - 若上方非 Chest 且 `AutomateEnabled()` → 由 `getConnectorType` 判断是否 Machine 或 Flooring
+  - 否则返回 `null`
+
+### getConnectorType
+
+```csharp
+private ConnectorType getConnectorType(Vector2 tile, GameLocation location)
+```
+
+| 类型 | 判断条件 |
+|------|----------|
+| Chest | `location.objects[tile] is Chest` 且非 hopper |
+| Machine | `GetAutomateMachineStates()[tile]` 存在 |
+| Flooring | `Config.FlooringAsInput` && `location.terrainFeatures[tile] is Flooring` |
+| None | 以上都不满足 |
+
+## AutomateChestGroup Flood-Fill
+
+从种子 `Vector2 startPos` 开始 BFS，遍历四向邻居，收集：
+
+- 所有非 hopper 的 Chest
+- 所有 Automate 认识的 Machine
+- Flooring 作为 connector（`feature is Flooring`）
+
+### isConnectableTile（BFS 邻居判断）
+
+严格按 Automate 标准，**不额外扩展** machine 检测范围：
+
+```csharp
+private bool isConnectableTile(Vector2 tile, GameLocation location) {
+    // Chest（排除 hopper）
+    if (location.objects.TryGetValue(tile, out var obj) && obj is Chest chest) {
+        return !Utill.IsHopper(chest);
+    }
+    // Machine via Automate API
+    if (this.ctx.GetAutomateMachineStates(location).ContainsKey(tile)) return true;
+    // Flooring connector
+    if (location.terrainFeatures.TryGetValue(tile, out var feature)
+        && feature is StardewValley.TerrainFeatures.Flooring) return true;
+    return false;
+}
+```
+
+## 事件处理
+
+| 事件 | 触发条件 | 处理逻辑 |
+|------|----------|----------|
+| `SaveLoaded` | 存档加载完成 | 重建所有 LocationManager |
+| `DayStarted` | 游戏日开始 | 重建所有 LocationManager |
+| `ObjectListChanged` | 物体增删 | Hopper/Chest 变动分发到对应 Handler |
+| `TerrainFeatureListChanged` | 地形特征变动 | `FlooringAsInput` 启用时，仅 Flooring 变动触发重建 |
+| `UpdateTicked` | 每帧 | 按 `TransferInterval` 执行 `AttemptTransfer` |
+
+### Handler 分工
+
+- `HandleHopperRemoved`: 从 LocationManager 移除对应 IOGroup，清理 modData
+- `HandleHopperAdded`: 获取或创建 LocationManager，调用 `Add(hopper)`
+- `HandleChestChanged`: 调用 `buildLocationManager(location)` 重建该 location
+
+## Hopper 容量（Harmony Patch）
+
+通过 Harmony Postfix 拦截 `Chest.GetActualCapacity`：
+
+```csharp
+[HarmonyPatch(typeof(Chest), nameof(Chest.GetActualCapacity))]
+private static class ChestGetActualCapacityPatch {
+    [HarmonyPostfix]
+    private static void GetActualCapacity_Postfix(Chest __instance, ref int __result) {
+        if (__instance.modData.TryGetValue(CapacityModDataKey, out string val)
+            && int.TryParse(val, out int cap)
+            && cap > 0) {
+            __result = cap;
+        }
+    }
+}
+```
+
+容量值存储在 `modData["SmartFilteredHopper/Capacity"]`，通过 `stampHopperCapacity()` 在存档加载、游戏开始、配置保存时更新。
 
 ## 设计原则
 
-1. **单一职责**：每个类/方法只做一件事
-2. **接口抽象**：IInputGroup 支持不同的输入组实现
-3. **事件驱动**：ObjectListChanged 触发时进行精细处理，而非全局重建
-4. **Location 隔离**：按 GameLocation 组织管理不同区域的 hopper
-
-## 代码规范
-
-### 事件处理规范
-- **类型检查在事件分发层完成**: 在 `ObjectListChanged` 等事件处理器中进行类型检查
-- **Handler 接收强类型参数**: 例如 `HandleHopperAdded(Chest hopper)` 而非 `HandleHopperAdded(Object obj)`
-- **Handler 内部不再做类型检查**: 假设参数类型正确
-
-### Manager 类设计
-- **Manager 初始化为空**: 通过 `Add()` 方法添加成员
-- **提供 `RemoveXxx(identifier)` 方法**: 移除特定成员
-- **不在构造函数中直接注入**: 需要复杂查找逻辑的依赖
-
-## 今日工作摘要 (2026-04-05)
-
-### 1. ObjectListChanged 重构
-按照 PRD step 3 重构了事件处理逻辑：
-- 新增 `HandleHopperRemoved`: 从 LocationManager 移除对应 IOGroup，清理 modData
-- 新增 `HandleHopperAdded`: 获取或创建 LocationManager，调用 Add(hopper)
-- 新增 `HandleChestChanged`: 重建该 location 下的所有 Pipelines
-- 类型检查提到 ObjectListChanged 中，handler 接收强类型参数
-
-### 2. LocationManager.RemoveGroupByHopper
-新增方法，通过遍历 IOGroups 匹配 hopper 并移除，同时清理 modData
-
-### 3. 全项目重命名
-- `Pipeline` → `LocationManager`
-- `Pipeline.cs` → `LocationManager.cs`
-- `BuildPipeline` → `BuildLocationManager`
-
-## 今日工作摘要 (2026-04-06)
-
-### 1. 项目重命名
-- `FilteredChestHopperRedux` → `SmartFilteredHopper`
-- 更新所有 namespace 引用
-
-### 2. IInputGroup 接口实现
-- `ChestWrap`: 包装单个 chest
-- `AutomateChestGroup`: flood fill 算法查找所有连接的 chest 和 machine，flood fill 时排除 hopper
-
-### 3. Config 保存时机的修复
-- 将 `GrabAutomateChestGroup` 变化的 rebuild 从 `OnFieldChanged`（立即）移到 `Save`（用户保存配置后）
-- `RegisterConfigMenu` 增加 `Action onAutomateChanged` 参数
-- 新增 `Context.AutomateEnabled()` 方法，同时检查 `automateApi != null && Config.GrabAutomateChestGroup`
-- 移除 `OnAutomateChanged` 方法
-
-### 4. Filter Items 获取方式修复
-- 原代码 `GetItemsForPlayer(this.InputGroup.StartChest.owner.Value)` 从 input chest 的 owner 取 filter
-- 修复为直接 `this.Hopper.Items` 取 hopper 里的 filter items
-
-### 5. HandleChestChanged 逻辑修复
-- 原逻辑只调用 `RebuildIOGroups()`
-- 修复为直接调用 `buildLocationManager(location)` 重建整个 location 的 manager
-- 解决先放 hopper 再放 output chest 导致 hopper 未被管理的问题
-
-### 6. 日志增强
-- `AutomateChestGroup` 初始化时打印收集到的 chests 和 machines
-- `ProcessInputChest` 打印 hopper 位置、input items、filter items、output 位置
+1. **单一职责**: 每个类/方法只做一件事
+2. **接口抽象**: IInputGroup 支持不同的输入组实现
+3. **事件驱动**: 精细处理变更，而非全局重建
+4. **Location 隔离**: 按 GameLocation 组织管理不同区域的 hopper
+5. **Automate 兼容**: 严格对齐 Automate 标准，不做超出其能力的假设

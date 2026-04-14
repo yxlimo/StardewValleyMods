@@ -10,9 +10,9 @@ namespace SmartFilteredHopper.LocationManager {
   /// </summary>
   internal interface IInputGroup {
     /// <summary>
-    /// 起点箱子（输入组的起始点）
+    /// 起点 tile（输入组的起始点）
     /// </summary>
-    Chest StartChest { get; }
+    Vector2 StartTile { get; }
 
     /// <summary>
     /// 判断某个 Chest 是否在输入组中
@@ -34,13 +34,13 @@ namespace SmartFilteredHopper.LocationManager {
   /// 包装单个 Chest，实现 IInputGroup 接口
   /// </summary>
   internal class ChestWrap : IInputGroup {
-    private Chest chest;
+    private readonly Chest chest;
 
     public ChestWrap(Chest chest) {
       this.chest = chest;
     }
 
-    public Chest StartChest => this.chest;
+    public Vector2 StartTile => this.chest.TileLocation;
 
     public bool Contains(Chest chest) {
       return this.chest == chest;
@@ -60,16 +60,16 @@ namespace SmartFilteredHopper.LocationManager {
   /// </summary>
   internal class AutomateChestGroup : IInputGroup {
     private readonly Context ctx;
-    private readonly Chest startChest;
+    private readonly Vector2 startPos;
     private readonly GameLocation location;
     private readonly List<Chest> chests;
     private readonly List<Vector2> machines;
 
-    public AutomateChestGroup(Context ctx, Chest startChest, GameLocation location) {
+    public AutomateChestGroup(Context ctx, Vector2 startPos, GameLocation location) {
       this.ctx = ctx;
-      this.startChest = startChest;
+      this.startPos = startPos;
       this.location = location;
-      var (foundChests, foundMachines) = this.floodFillChests(startChest, location);
+      var (foundChests, foundMachines) = this.floodFillChests(startPos, location);
       this.chests = foundChests;
       this.machines = foundMachines;
 
@@ -77,7 +77,7 @@ namespace SmartFilteredHopper.LocationManager {
     }
 
     private void logCollectionResult() {
-      this.ctx.Trace($"AutomateChestGroup at {this.startChest.TileLocation}: collected {this.chests.Count} chests, {this.machines.Count} machines");
+      this.ctx.Trace($"AutomateChestGroup at {this.startPos}: collected {this.chests.Count} chests, {this.machines.Count} machines");
       foreach (var chest in this.chests) {
         this.ctx.Trace($"  Chest at {chest.TileLocation}");
       }
@@ -86,7 +86,7 @@ namespace SmartFilteredHopper.LocationManager {
       }
     }
 
-    public Chest StartChest => this.startChest;
+    public Vector2 StartTile => this.startPos;
 
     public List<Chest> Chests => this.chests;
 
@@ -126,14 +126,14 @@ namespace SmartFilteredHopper.LocationManager {
     /// <summary>
     /// Flood fill 算法查找所有连接的 Chest 和 Machine
     /// </summary>
-    private (List<Chest> chests, List<Vector2> machines) floodFillChests(Chest startChest, GameLocation location) {
+    private (List<Chest> chests, List<Vector2> machines) floodFillChests(Vector2 startPos, GameLocation location) {
       var visited = new HashSet<Vector2>();
       var chests = new List<Chest>();
       var machines = new List<Vector2>();
       var queue = new Queue<Vector2>();
 
-      queue.Enqueue(startChest.TileLocation);
-      visited.Add(startChest.TileLocation);
+      queue.Enqueue(startPos);
+      visited.Add(startPos);
 
       var machineStates = this.ctx.GetAutomateMachineStates(location);
 

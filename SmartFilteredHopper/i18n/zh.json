@@ -1,6 +1,8 @@
 {
     "config.enable-debug": "启用调试",
     "config.enable-debug.tooltip": "启用详细调试日志。禁用以获得更简洁的控制台输出。",
+    "config.hopper-capacity": "Hopper 容量",
+    "config.hopper-capacity.tooltip": "Hopper 可以容纳的最大过滤物品数量（仅支持 12 的倍数）",
     "config.compare-quality": "比较品质",
     "config.compare-quality.tooltip": "启用后，过滤器将同时检查物品 ID 和品质",
     "config.compare-artifact-source": "比较工匠物品来源",
@@ -8,5 +10,7 @@
     "config.transfer-interval": "转移间隔",
     "config.transfer-interval.tooltip": "物品转移逻辑的运行频率，按帧数计算（1 = 每帧，60 = 每秒）",
     "config.grab-automate-chest-group": "连接 Automate 箱子组",
-    "config.grab-automate-chest-group.tooltip": "如果输入箱子是 Automate 组的一部分，获取该组中的所有箱子（需要 Automate 模组）"
+    "config.grab-automate-chest-group.tooltip": "如果输入箱子是 Automate 组的一部分，获取该组中的所有箱子（需要 Automate 模组）",
+    "config.flooring-as-input": "地板作为输入",
+    "config.flooring-as-input.tooltip": "允许地板（路径）作为 hopper 的输入连接器，连接到相邻的箱子。仅在「连接 Automate 箱子组」启用时生效。禁用时，只有 hopper 正上方的箱子才会被识别为输入。"
 }

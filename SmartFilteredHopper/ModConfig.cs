@@ -7,10 +7,12 @@ namespace SmartFilteredHopper {
   internal class ModConfig {
 
     public int LogLevel { get; set; }
+    public int HopperCapacity { get; set; }
     public bool CompareQuality { get; set; }
     public bool CompareArtifactSource { get; set; }
     public int TransferInterval { get; set; }
     public bool GrabAutomateChestGroup { get; set; }
+    public bool FlooringAsInput { get; set; }
 
     private IGenericModConfigMenuApi configMenu;
 
@@ -20,10 +22,12 @@ namespace SmartFilteredHopper {
 
     public void Reset() {
       this.LogLevel = 0;
+      this.HopperCapacity = 36;
       this.CompareQuality = false;
       this.CompareArtifactSource = true;
       this.TransferInterval = 360;
       this.GrabAutomateChestGroup = false;
+      this.FlooringAsInput = false;
     }
 
     public void RegisterConfigMenu(IGenericModConfigMenuApi configMenuApi, IManifest manifest, IModHelper helper, Action onSave) {
@@ -46,6 +50,17 @@ namespace SmartFilteredHopper {
             else
               this.LogLevel = 2;
           }
+      );
+
+      this.configMenu.AddNumberOption(
+          mod: manifest,
+          name: () => helper.Translation.Get("config.hopper-capacity"),
+          tooltip: () => helper.Translation.Get("config.hopper-capacity.tooltip"),
+          getValue: () => this.HopperCapacity,
+          setValue: value => this.HopperCapacity = value,
+          min: 12,
+          max: 999,
+          interval: 12
       );
 
       this.configMenu.AddBoolOption(
@@ -80,6 +95,14 @@ namespace SmartFilteredHopper {
           tooltip: () => helper.Translation.Get("config.grab-automate-chest-group.tooltip"),
           getValue: () => this.GrabAutomateChestGroup,
           setValue: value => this.GrabAutomateChestGroup = value
+      );
+
+      this.configMenu.AddBoolOption(
+          mod: manifest,
+          name: () => helper.Translation.Get("config.flooring-as-input"),
+          tooltip: () => helper.Translation.Get("config.flooring-as-input.tooltip"),
+          getValue: () => this.FlooringAsInput,
+          setValue: value => this.FlooringAsInput = value
       );
     }
   }

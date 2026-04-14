@@ -8,6 +8,16 @@ using xTile.Dimensions;
 
 namespace SmartFilteredHopper.LocationManager {
 
+  /// <summary>
+  /// 表示 hopper 输入连接件的类型
+  /// </summary>
+  internal enum ConnectorType {
+    None,
+    Chest,
+    Machine,
+    Flooring
+  }
+
   internal class HopperIOGroup {
     public Chest Hopper { get; set; }
     public IInputGroup InputGroup { get; set; }
@@ -23,10 +33,6 @@ namespace SmartFilteredHopper.LocationManager {
 
     public bool ContainsChest(Chest chest) {
       return this.InputGroup?.Contains(chest) ?? false;
-    }
-
-    public bool IsStartChest(Chest chest) {
-      return this.InputGroup?.StartChest == chest;
     }
 
     /// <summary>
@@ -99,12 +105,13 @@ namespace SmartFilteredHopper.LocationManager {
     /// <summary>
     /// 重建 InputGroup
     /// </summary>
-    public void RebuildInput(Context ctx, Chest inputChest) {
+    public void RebuildInput(Context ctx, Vector2 inputPos) {
       IInputGroup inputGroup;
       if (ctx.AutomateEnabled()) {
-        inputGroup = new AutomateChestGroup(ctx, inputChest, this.Hopper.Location);
+        inputGroup = new AutomateChestGroup(ctx, inputPos, this.Hopper.Location);
       }
       else {
+        Chest inputChest = Utill.GetChestAt(this.Hopper.Location, inputPos);
         inputGroup = new ChestWrap(inputChest);
       }
       this.InputGroup = inputGroup;
@@ -133,20 +140,18 @@ namespace SmartFilteredHopper.LocationManager {
       // Mark hopper with modData flag immediately when scanning
       hopper.modData[modDataFlag] = "1";
 
-      var (input, output) = this.findHopperConnector(hopper);
-      if (input == null || output == null) {
+      var (inputPos, output) = this.findHopperConnector(hopper);
+      if (inputPos == null || output == null) {
         this.ctx.Trace($"Hopper({hopper.TileLocation}) in {this.location.Name} does not have valid input/output chests, skipping");
         return;
       }
 
-
       IInputGroup inputGroup;
       if (this.ctx.AutomateEnabled()) {
-        inputGroup = new AutomateChestGroup(this.ctx, input, hopper.Location);
+        inputGroup = new AutomateChestGroup(this.ctx, inputPos.Value, hopper.Location);
         this.ctx.Info($"Hopper({hopper.TileLocation}) in {this.location.Name} with Automate Mode added");
-      }
-      else {
-        inputGroup = new ChestWrap(input);
+      } else {
+        inputGroup = new ChestWrap(Utill.GetChestAt(this.location, inputPos.Value));
         this.ctx.Info($"Hopper({hopper.TileLocation}) in {this.location.Name} with Normal Mode added");
       }
 
@@ -154,10 +159,44 @@ namespace SmartFilteredHopper.LocationManager {
 
     }
 
-    private (Chest input, Chest output) findHopperConnector(Chest hopper) {
-      Chest inputChest = Utill.GetChestAt(hopper.Location, hopper.TileLocation - new Vector2(0, 1));
-      Chest outputChest = Utill.GetChestAt(hopper.Location, hopper.TileLocation + new Vector2(0, 1));
-      return (inputChest, outputChest);
+    private (Vector2? inputPos, Chest output) findHopperConnector(Chest hopper) {
+      var inputTile = hopper.TileLocation - new Vector2(0, 1);
+      var outputTile = hopper.TileLocation + new Vector2(0, 1);
+
+      Chest output = Utill.GetChestAt(hopper.Location, outputTile);
+
+      var inputType = this.getConnectorType(inputTile, hopper.Location);
+
+      if (inputType == ConnectorType.Chest){
+        return (inputTile, output);
+      }
+
+      if (this.ctx.AutomateEnabled() && (inputType == ConnectorType.Machine || inputType == ConnectorType.Flooring)) {
+        return (inputTile, output);
+      }
+
+      return (null, output);
+    }
+
+    private ConnectorType getConnectorType(Vector2 tile, GameLocation location) {
+      // Chest
+      if (location.objects.TryGetValue(tile, out var obj) && obj is Chest chest) {
+        if (Utill.IsHopper(chest)) return ConnectorType.None;
+        return ConnectorType.Chest;
+      }
+
+      // Machine via Automate API
+      var machineStates = this.ctx.GetAutomateMachineStates(location);
+      if (machineStates.ContainsKey(tile)) return ConnectorType.Machine;
+
+      // Flooring/Connector (only if user enabled it)
+      if (this.ctx.Config.FlooringAsInput
+          && location.terrainFeatures.TryGetValue(tile, out var feature)
+          && feature is StardewValley.TerrainFeatures.Flooring) {
+        return ConnectorType.Flooring;
+      }
+
+      return ConnectorType.None;
     }
 
     public void AttemptTransfer() {
@@ -183,14 +222,14 @@ namespace SmartFilteredHopper.LocationManager {
     public void RebuildIOGroups() {
       for (int i = this.IOGroups.Count - 1; i >= 0; i--) {
         var group = this.IOGroups[i];
-        var (input, output) = this.findHopperConnector(group.Hopper);
-        if (input == null || output == null) {
+        var (inputPos, output) = this.findHopperConnector(group.Hopper);
+        if (inputPos == null || output == null) {
           // input 或 output 不存在，移除该 Group
           group.Hopper.modData.Remove(modDataFlag);
           this.IOGroups.RemoveAt(i);
           continue;
         }
-        group.RebuildInput(this.ctx, input);
+        group.RebuildInput(this.ctx, inputPos.Value);
       }
     }
   }
