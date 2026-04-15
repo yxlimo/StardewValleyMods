@@ -4,6 +4,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Objects;
+using SmartFilteredHopper.Framework;
 using SmartFilteredHopper.Interfaces;
 using SmartFilteredHopper.LocationManager;
 
@@ -15,8 +16,6 @@ namespace SmartFilteredHopper {
 
     private Dictionary<GameLocation, LocationManager.Manager> managers;
     private Harmony harmony;
-
-    private const string CapacityModDataKey = "SmartFilteredHopper/Capacity";
 
     public override void Entry(IModHelper helper) {
       helper.Events.GameLoop.UpdateTicked += this.UpdateTicked;
@@ -31,6 +30,7 @@ namespace SmartFilteredHopper {
 
       this.harmony = new Harmony(this.ModManifest.UniqueID);
       this.harmony.PatchAll();
+      HopperChestPatches.Apply(this.harmony, this.Monitor);
     }
 
     private void GameLaunched(object sender, GameLaunchedEventArgs e) {
@@ -50,7 +50,6 @@ namespace SmartFilteredHopper {
 
     private void SaveLoaded(object sender, SaveLoadedEventArgs e) {
       this.ctx.Info("SaveLoaded, try regenerating LocationManagers");
-      this.stampHopperCapacity();
       this.rebuildAllLocationManagers();
     }
 
@@ -142,7 +141,6 @@ namespace SmartFilteredHopper {
       this.Helper.WriteConfig(this.ctx.Config);
 
       this.ctx.Info("Option saved, rebuilding all managers");
-      this.stampHopperCapacity();
       foreach (var manager in this.managers.Values) {
         manager.RebuildIOGroups();
       }
@@ -166,34 +164,6 @@ namespace SmartFilteredHopper {
         this.buildLocationManager(location);
         return true;
       });
-    }
-
-    /// <summary>
-    /// Stamp all hoppers with the configured capacity in their modData.
-    /// </summary>
-    private void stampHopperCapacity() {
-      int capacity = this.ctx.Config.HopperCapacity;
-      Utility.ForEachLocation(location => {
-        foreach (var pair in location.objects.Pairs) {
-          if (Utill.TryExtractHopper(pair.Value, out var hopper)) {
-            hopper.modData[CapacityModDataKey] = capacity.ToString();
-          }
-        }
-        return true;
-      });
-    }
-
-    [HarmonyPatch]
-    [HarmonyPatch(typeof(Chest), nameof(Chest.GetActualCapacity))]
-    private static class ChestGetActualCapacityPatch {
-      [HarmonyPostfix]
-      private static void GetActualCapacity_Postfix(Chest __instance, ref int __result) {
-        if (__instance.modData.TryGetValue(CapacityModDataKey, out string val)
-            && int.TryParse(val, out int cap)
-            && cap > 0) {
-          __result = cap;
-        }
-      }
     }
 
   }

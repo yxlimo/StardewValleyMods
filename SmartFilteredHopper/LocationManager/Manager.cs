@@ -43,12 +43,12 @@ namespace SmartFilteredHopper.LocationManager {
       var filterItems = this.Hopper.Items;
       string inputNames = string.Join(", ", inputItems.Select(i => $"{i.Name}:{i.QualifiedItemId}"));
       string filterNames = string.Join(", ", filterItems.Where(i => i != null).Select(i => $"{i.Name}:{i.QualifiedItemId}"));
-      this.ctx.Trace($"ProcessInputChest: hopper={this.Hopper.TileLocation}, input=[{inputNames}], filter=[{filterNames}], output={this.Output.TileLocation}");
+      // this.ctx.Trace($"ProcessInputChest: hopper={this.Hopper.TileLocation}, input=[{inputNames}], filter=[{filterNames}], output={this.Output.TileLocation}");
 
       for (int i = inputItems.Count - 1; i >= 0; i--) {
         Item item = inputItems[i];
         if (!this.shouldTransfer(item, filterItems)) {
-          this.ctx.Trace($"Skip {item.Name}:{item.QualifiedItemId}: not passed in filter");
+          // this.ctx.Trace($"Skip {item.Name}:{item.QualifiedItemId}: not passed in filter");
           continue;
         }
         this.transferItem(item);
@@ -137,8 +137,10 @@ namespace SmartFilteredHopper.LocationManager {
         return;
       }
 
-      // Mark hopper with modData flag immediately when scanning
+      // Mark hopper with modData flags immediately when scanning
       hopper.modData[modDataFlag] = "1";
+      hopper.modData[Framework.HopperChestPatches.CapacityModDataKey] = this.ctx.Config.HopperCapacity.ToString();
+      this.ctx.Trace($"Stamped hopper at {hopper.TileLocation} with capacity {this.ctx.Config.HopperCapacity}");
 
       var (inputPos, output) = this.findHopperConnector(hopper);
       if (inputPos == null || output == null) {
@@ -220,6 +222,10 @@ namespace SmartFilteredHopper.LocationManager {
     /// 重建所有 IOGroup 的 Input
     /// </summary>
     public void RebuildIOGroups() {
+      if (this.IOGroups.Count <= 0) {
+        return;
+      }
+      this.ctx.Info($"[Manager.RebuildIOGroups] Rebuilding {this.IOGroups.Count} groups with capacity {this.ctx.Config.HopperCapacity} in {this.location.Name}");
       for (int i = this.IOGroups.Count - 1; i >= 0; i--) {
         var group = this.IOGroups[i];
         var (inputPos, output) = this.findHopperConnector(group.Hopper);
@@ -229,6 +235,9 @@ namespace SmartFilteredHopper.LocationManager {
           this.IOGroups.RemoveAt(i);
           continue;
         }
+        // Re-stamp capacity in case config changed
+        group.Hopper.modData[Framework.HopperChestPatches.CapacityModDataKey] = this.ctx.Config.HopperCapacity.ToString();
+        this.ctx.Info($"[Manager.RebuildIOGroups] Re-stamped hopper at {group.Hopper.TileLocation} with capacity {this.ctx.Config.HopperCapacity}");
         group.RebuildInput(this.ctx, inputPos.Value);
       }
     }

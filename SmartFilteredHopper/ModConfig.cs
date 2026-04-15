@@ -58,9 +58,9 @@ namespace SmartFilteredHopper {
           tooltip: () => helper.Translation.Get("config.hopper-capacity.tooltip"),
           getValue: () => this.HopperCapacity,
           setValue: value => this.HopperCapacity = value,
-          min: 12,
-          max: 999,
-          interval: 12
+          min: 9,
+          max: 69,
+          interval: 3
       );
 
       this.configMenu.AddBoolOption(

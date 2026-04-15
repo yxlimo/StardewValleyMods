@@ -44,6 +44,7 @@ scripts/
 # playwright
 .playwright
 .playwright-cli/
+.playwright-mcp/
 
 # ChineseTranslation project
 ChineseTranslation/mods/default
