@@ -39,7 +39,7 @@ namespace SmartFilteredHopper.LocationManager {
     /// 处理单个 hopper 组的输入宝箱
     /// </summary>
     public void ProcessInputChest() {
-      var inputItems = this.InputGroup.GetItems();
+      var inputItems = this.InputGroup.GetItems().Where(i => i != null).ToList();
       var filterItems = this.Hopper.Items;
       string inputNames = string.Join(", ", inputItems.Select(i => $"{i.Name}:{i.QualifiedItemId}"));
       string filterNames = string.Join(", ", filterItems.Where(i => i != null).Select(i => $"{i.Name}:{i.QualifiedItemId}"));
