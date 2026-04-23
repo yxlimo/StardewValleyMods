@@ -19,6 +19,10 @@ namespace SmartFilteredHopper.LocationManager {
   }
 
   internal class HopperIOGroup {
+    internal HopperIOGroup(Chest hopper, Chest output)  {
+      this.Hopper = hopper;
+      this.Output = output;
+    }
     public Chest Hopper { get; set; }
     public IInputGroup InputGroup { get; set; }
     public Chest Output { get; set; }
@@ -109,8 +113,7 @@ namespace SmartFilteredHopper.LocationManager {
       IInputGroup inputGroup;
       if (ctx.AutomateEnabled()) {
         inputGroup = new AutomateChestGroup(ctx, inputPos, this.Hopper.Location);
-      }
-      else {
+      } else {
         Chest inputChest = Utill.GetChestAt(this.Hopper.Location, inputPos);
         inputGroup = new ChestWrap(inputChest);
       }
