@@ -74,7 +74,7 @@ namespace SmartFilteredHopper.LocationManager {
         if (this.ctx.Config.CompareArtifactSource && Utill.HasPreserveSource(item) && Utill.HasPreserveSource(filterItem)) {
           string itemSource = Utill.GetPreserveTypeID(item);
           string filterSource = Utill.GetPreserveTypeID(filterItem);
-          this.ctx.Trace($"shouldTransfer: {item.Name}:{item.QualifiedItemId} CompareArtifactSource enabled, itemSource={itemSource}, filterSource={filterSource}");
+          this.ctx.Trace($"shouldTransfer: {item.DisplayName}:{item.QualifiedItemId} CompareArtifactSource enabled, itemSource={itemSource}, filterSource={filterSource}");
           if (itemSource != filterSource) {
             continue;
           }
@@ -96,7 +96,7 @@ namespace SmartFilteredHopper.LocationManager {
       Item remaining = this.Output.addItem(newItem);
 
       int transferred = remaining != null ? item.Stack - remaining.Stack : item.Stack;
-      this.ctx.Info($"transferItem: {item.Name}:{item.QualifiedItemId} to output({this.Output.TileLocation}), transferred={transferred}/{item.Stack}");
+      this.ctx.Info($"transferItem: {item.DisplayName}:{item.QualifiedItemId} to output({this.Output.TileLocation}), transferred={transferred}/{item.Stack}");
 
       this.InputGroup.RemoveItem(item, transferred);
       return transferred > 0;
