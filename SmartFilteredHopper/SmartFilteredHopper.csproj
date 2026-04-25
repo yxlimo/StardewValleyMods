@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>SmartFilteredHopper</AssemblyName>
     <RootNamespace>SmartFilteredHopper</RootNamespace>
-    <Version>0.3.0</Version>
+    <Version>0.3.3</Version>
     <LangVersion>latest</LangVersion>
     <TargetFramework>net6.0</TargetFramework>
     <EnableHarmony>true</EnableHarmony>

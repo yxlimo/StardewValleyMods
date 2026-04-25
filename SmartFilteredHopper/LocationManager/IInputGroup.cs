@@ -106,16 +106,32 @@ namespace SmartFilteredHopper.LocationManager {
 			return this.chests.Contains(chest);
 		}
 
+		/// <summary>
+		/// 获取去重后的 chest 列表，多个祝尼魔箱视为一个箱子
+		/// </summary>
+		private IEnumerable<Chest> GetUniqueChests() {
+			bool hasJunimoChest = false;
+			foreach (var chest in this.GetChests()) {
+				if (chest.SpecialChestType == Chest.SpecialChestTypes.JunimoChest) {
+					if (hasJunimoChest) {
+						continue;
+					}
+					hasJunimoChest = true;
+				}
+				yield return chest;
+			}
+		}
+
 		public List<Item> GetItems() {
 			var items = new List<Item>();
-			foreach (var chest in this.GetChests()) {
+			foreach (var chest in this.GetUniqueChests()) {
 				items.AddRange(chest.GetItemsForPlayer(chest.owner.Value));
 			}
 			return items;
 		}
 
 		public void RemoveItem(Item item, int count) {
-			foreach (var chest in this.GetChests()) {
+			foreach (var chest in this.GetUniqueChests()) {
 				int remaining = Utill.RemoveItemFromChest(chest, item, count);
 				if (remaining <= 0)
 					return;
