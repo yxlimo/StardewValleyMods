@@ -4,7 +4,8 @@ yxlimo 的星露谷 Mod 合集
 
 ## Memory
 修改项目前需确保已阅读相关的文档
-- [智能加载器(FilteredChestHopperRedux)](./FilteredChestHopperRedux/docs/design.md)
+- [智能加载器(SmartFilteredHopper)](./SmartFilteredHopper/docs/design.md)
+- [Release 发布流程](./docs/release-workflow.md)
 
 ## Rules
 
